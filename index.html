@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="意大利语打卡">
+<meta name="theme-color" content="#009246">
+<link rel="manifest" href="/italiano-checkin/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/italiano-checkin/icon-192.png">
+<link rel="apple-touch-icon" href="/italiano-checkin/icon-192.png">
+<title>🇮🇹 意大利语暑期打卡</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helvetica Neue',sans-serif;background:linear-gradient(135deg,#f0f4f0,#e8f0e3 50%,#f5f0e8);min-height:100vh;min-height:-webkit-fill-available;color:#2c3e2d}
+.container{max-width:500px;margin:0 auto;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom));min-height:100vh}
+
+/* Auth */
+.auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:-webkit-fill-available;padding:20px}
+.auth-card{background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 8px 30px rgba(0,0,0,.1)}
+.auth-card .logo{text-align:center;font-size:48px;margin-bottom:8px}
+.auth-card h1{text-align:center;font-size:20px;margin-bottom:4px;color:#009246}
+.auth-card .sub{text-align:center;font-size:12px;color:#999;margin-bottom:24px}
+.auth-card label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;color:#555}
+.auth-card input{width:100%;padding:12px 14px;border:2px solid #e8e8e8;border-radius:12px;font-size:15px;margin-bottom:16px;outline:none;transition:border .2s;-webkit-appearance:none}
+.auth-card input:focus{border-color:#009246}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
+.btn-primary{background:linear-gradient(135deg,#009246,#00b359);color:#fff}
+.btn-primary:active{transform:scale(.97);opacity:.9}
+.btn-outline{background:#fff;color:#009246;border:2px solid #009246;margin-top:10px}
+.btn-outline:active{background:#f0faf3}
+.switch{text-align:center;margin-top:16px;font-size:13px;color:#888}
+.switch a{color:#009246;font-weight:600;cursor:pointer;text-decoration:none}
+.error{color:#ce2b37;font-size:12px;text-align:center;margin-bottom:8px;min-height:18px}
+
+/* Pages */
+.page{display:none}
+.page.active{display:block}
+
+/* Header */
+.header{background:linear-gradient(135deg,#009246,#008C3A 40%,#ce2b37 40%,#ce2b37 60%,#fff 60%,#fff);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(0,146,70,.2)}
+.header::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,.12);backdrop-filter:blur(2px)}
+.header .hc{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:20px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.2)}
+.logout-btn{color:#fff;font-size:13px;cursor:pointer;padding:8px 16px;border:1px solid rgba(255,255,255,.5);border-radius:20px;background:rgba(255,255,255,.15);-webkit-appearance:none}
+.user-tag{font-size:12px;color:rgba(255,255,255,.85)}
+
+/* Stats */
+.stats-row{display:flex;gap:10px;margin-bottom:16px}
+.stat-card{flex:1;background:#fff;border-radius:16px;padding:14px 10px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.stat-card .icon{font-size:24px;margin-bottom:2px}
+.stat-card .number{font-size:26px;font-weight:700;color:#009246}
+.stat-card.streak .number{color:#ce2b37}
+.stat-card.flower .number{color:#e74c3c}
+.stat-card .label{font-size:11px;color:#888;margin-top:2px}
+
+/* Progress */
+.progress-wrap{margin:16px 0 8px}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:4px}
+.progress-bar{height:10px;background:#e0e0e0;border-radius:5px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#009246,#00b359);border-radius:5px;transition:width .5s}
+
+/* Section */
+.section-title{font-size:15px;font-weight:700;margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+
+/* Task Card */
+.task-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 2px 12px rgba(0,0,0,.06);display:flex;align-items:center;gap:12px;transition:all .2s}
+.task-card.checked{background:#f0faf3;border:2px solid #009246}
+.task-card .task-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.task-card .task-icon.hw{background:#e3f2fd}.task-card .task-icon.dt{background:#fff3e0}
+.task-card .task-icon.rc{background:#f3e5f5}.task-card .task-icon.sp{background:#e8f5e9}
+.task-info{flex:1;min-width:0}
+.task-info .task-name{font-weight:700;font-size:14px}
+.task-info .task-content{font-size:12px;color:#555;margin-top:5px;background:#f9f9f9;padding:8px 10px;border-radius:8px;line-height:1.5;word-break:break-all}
+.check-btn{width:44px;height:44px;border-radius:50%;border:3px solid #ddd;background:#fff;font-size:18px;cursor:pointer;flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center;-webkit-appearance:none}
+.check-btn:active{border-color:#009246;transform:scale(.92)}
+.check-btn.done{background:#009246;border-color:#009246;color:#fff}
+
+/* Reward */
+.reward-area{background:linear-gradient(135deg,#fff9e6,#fff3cd);border-radius:16px;padding:18px;margin-top:20px;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:center}
+.reward-area h3{font-size:15px;margin-bottom:8px}
+.flower-row{display:flex;justify-content:center;gap:6px;margin:10px 0;flex-wrap:wrap}
+.flower{font-size:30px;animation:bloom .5s ease}
+@keyframes bloom{0%{transform:scale(0) rotate(-30deg);opacity:0}100%{transform:scale(1) rotate(0deg);opacity:1}}
+.reward-rule{font-size:11px;color:#996;margin-top:6px}
+
+/* History */
+.history-area{margin-top:20px}
+.history-area h3{font-size:15px;margin-bottom:8px}
+.history-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.04)}
+.history-item .date{color:#888;font-size:11px}
+.badge{font-size:10px;padding:3px 7px;border-radius:20px;font-weight:600}
+.badge.hw{background:#e3f2fd;color:#1565c0}.badge.dt{background:#fff3e0;color:#e65100}
+.badge.rc{background:#f3e5f5;color:#7b1fa2}.badge.sp{background:#e8f5e9;color:#2e7d32}
+
+/* === TEACHER === */
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:#fff;border-radius:14px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.tab-btn{flex:1;padding:10px 6px;border:none;background:none;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;color:#888;transition:all .2s;-webkit-appearance:none}
+.tab-btn.active{background:#009246;color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.student-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);cursor:pointer;transition:all .2s;margin-bottom:10px}
+.student-card:active{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:scale(.98)}
+.student-card .s-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.student-card .s-name{font-weight:700;font-size:15px}
+.student-card .s-stats{display:flex;gap:16px;font-size:12px;color:#666}
+.student-card .s-stats span{font-weight:600}
+.student-card .s-today{display:flex;gap:6px;margin-top:8px}
+.s-dot{width:10px;height:10px;border-radius:50%}
+.s-dot.done{background:#009246}.s-dot.pending{background:#ddd}
+
+.empty-state{text-align:center;color:#bbb;padding:40px 20px;font-size:14px}
+.empty-state .icon{font-size:48px;margin-bottom:10px}
+
+.task-editor{margin-bottom:16px}
+.task-editor label{display:block;font-size:12px;font-weight:600;color:#666;margin-bottom:4px}
+.task-editor textarea{width:100%;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:14px;resize:vertical;min-height:60px;outline:none;margin-bottom:10px;font-family:inherit;line-height:1.5;-webkit-appearance:none}
+.task-editor textarea:focus{border-color:#009246}
+.task-editor .row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.task-editor select{flex:1;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:14px;outline:none;-webkit-appearance:none;background:#fff;min-height:44px}
+.task-editor select:focus{border-color:#009246}
+.task-editor .row input[type=date]{flex:1;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:14px;outline:none;-webkit-appearance:none;min-height:44px}
+.task-editor .row input[type=date]:focus{border-color:#009246}
+.task-editor .cat-label{font-size:13px;font-weight:700;color:#333;margin:8px 0 4px;display:flex;align-items:center;gap:6px}
+
+.btn-sm{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;-webkit-appearance:none;min-height:40px}
+.btn-sm:active{transform:scale(.95)}
+.btn-sm.primary{background:#009246;color:#fff}
+.btn-sm.danger{background:#fff;color:#ce2b37;border:1px solid #ce2b37}
+.btn-sm.outline{background:#fff;color:#009246;border:1px solid #009246}
+
+.settings-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:14px}
+.settings-card h4{font-size:14px;margin-bottom:12px}
+.settings-card .hint{font-size:11px;color:#999;margin-top:6px;line-height:1.5}
+.settings-card input{width:100%;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:14px;outline:none;-webkit-appearance:none;margin-bottom:10px}
+.settings-card input:focus{border-color:#009246}
+.settings-card .row{display:flex;gap:8px;align-items:flex-end}
+
+.user-list-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+.role-tag{font-size:10px;padding:3px 8px;border-radius:12px;font-weight:600}
+.role-tag.teacher{background:#fce4ec;color:#c62828}
+.role-tag.student{background:#e3f2fd;color:#1565c0}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;z-index:999;pointer-events:none;white-space:nowrap;animation:slideDown .3s ease;max-width:90vw}
+@keyframes slideDown{0%{top:-60px;opacity:0}100%{top:20px;opacity:1}}
+.toast.hide{animation:slideUp .3s ease forwards}
+@keyframes slideUp{0%{top:20px;opacity:1}100%{top:-60px;opacity:0}}
+
+.confetti-container{position:fixed;inset:0;pointer-events:none;z-index:998}
+.confetti-piece{position:absolute;font-size:24px;animation:fall linear forwards}
+@keyframes fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:997;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:14px;color:#888}
+.spinner{width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:#009246;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PWA install banner */
+.install-banner{display:none;background:#fff;border-radius:14px;padding:14px 18px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);align-items:center;gap:12px}
+.install-banner.show{display:flex}
+.install-banner .ib-icon{font-size:36px}
+.install-banner .ib-text{flex:1;font-size:13px;line-height:1.4}
+.install-banner .ib-btn{white-space:nowrap;padding:8px 16px;background:#009246;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;-webkit-appearance:none}
+
+.footer{text-align:center;color:#bbb;font-size:11px;margin:20px 0 30px}
+.sync-status{font-size:11px;color:#aaa;text-align:center;margin-top:6px}
+.sync-status.error{color:#ce2b37}
+.sync-status.ok{color:#009246}
+
+@supports(padding-bottom:env(safe-area-inset-bottom)){
+  .toast{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <span id="loadingText">加载中...</span>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast" style="display:none"></div>
+<div id="confettiContainer" class="confetti-container"></div>
+
+<!-- LOGIN -->
+<div class="page active" id="loginPage">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="logo">🇮🇹</div>
+      <h1>Il Mio Diario Estivo</h1>
+      <div class="sub">意大利语暑期打卡</div>
+      <div class="error" id="loginError"></div>
+      <label>用户名</label>
+      <input type="text" id="loginUser" placeholder="输入用户名" autocomplete="username" autocapitalize="none">
+      <label>密码</label>
+      <input type="password" id="loginPass" placeholder="输入密码" autocomplete="current-password">
+      <button class="btn btn-primary" onclick="doLogin()">登 录</button>
+      <div class="switch">还没有账号？<a onclick="showRegister()">注册学生账号</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div class="page" id="registerPage">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="logo">📝</div>
+      <h1>注册学生账号</h1>
+      <div class="sub">仅限学生注册</div>
+      <div class="error" id="regError"></div>
+      <label>用户名</label>
+      <input type="text" id="regUser" placeholder="输入用户名" autocapitalize="none">
+      <label>密码</label>
+      <input type="password" id="regPass" placeholder="密码（至少4位）">
+      <label>确认密码</label>
+      <input type="password" id="regPass2" placeholder="再次输入密码">
+      <button class="btn btn-primary" onclick="doRegister()">注 册</button>
+      <div class="switch">已有账号？<a onclick="showLogin()">返回登录</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- TEACHER -->
+<div class="page" id="teacherPage">
+  <div class="container">
+    <div class="install-banner" id="installBanner">
+      <span class="ib-icon">📲</span>
+      <span class="ib-text">添加到主屏幕，像 App 一样使用</span>
+      <button class="ib-btn" onclick="installPWA()">安装</button>
+    </div>
+    <div class="header">
+      <div class="hc">
+        <div>
+          <h1>👨‍🏫 教师端</h1>
+          <div class="user-tag" id="teacherNameTag"></div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">退出</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTeacherTab('students')">📊 学生</button>
+      <button class="tab-btn" onclick="switchTeacherTab('tasks')">📝 作业</button>
+      <button class="tab-btn" onclick="switchTeacherTab('settings')">⚙️ 设置</button>
+    </div>
+    <div class="tab-content active" id="teacherTabStudents"></div>
+    <div class="tab-content" id="teacherTabTasks"></div>
+    <div class="tab-content" id="teacherTabSettings"></div>
+    <div class="sync-status" id="syncStatus"></div>
+  </div>
+</div>
+
+<!-- STUDENT -->
+<div class="page" id="studentPage">
+  <div class="container">
+    <div class="install-banner" id="installBanner2">
+      <span class="ib-icon">📲</span>
+      <span class="ib-text">添加到主屏幕，像 App 一样使用</span>
+      <button class="ib-btn" onclick="installPWA()">安装</button>
+    </div>
+    <div class="header">
+      <div class="hc">
+        <div>
+          <h1>🇮🇹 Il Mio Diario Estivo</h1>
+          <div class="user-tag" id="studentNameTag"></div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">退出</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="icon">🔥</div><div class="number" id="streakCount">0</div><div class="label">连续打卡</div></div>
+      <div class="stat-card flower"><div class="icon">🌹</div><div class="number" id="flowerCount">0</div><div class="label">小红花</div></div>
+      <div class="stat-card"><div class="icon">📅</div><div class="number" id="todayDate"></div><div class="label">今日</div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>今日进度</span><span id="progressText">0/4</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="section-title">📝 今日任务 · Compiti di Oggi</div>
+    <div id="taskList"></div>
+    <div class="reward-area">
+      <h3>🏆 奖励机制</h3>
+      <div class="flower-row" id="flowerRow"></div>
+      <p id="flowerMsg" style="font-size:13px;color:#888;">连续打卡 5 天获得 1 朵小红花 🌹</p>
+      <div class="reward-rule">📋 四项全部完成 = 打卡成功 · 连续5天 = 🌹×1 · 可线下兑换</div>
+    </div>
+    <div class="history-area">
+      <h3>📋 打卡记录</h3>
+      <div id="historyList"></div>
+    </div>
+    <div class="footer">Buono studio! 🇮🇹</div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIG =====
+const REPO_OWNER = 'lanbeier0813';
+const REPO_NAME = 'italiano-checkin';
+const DATA_PATH = 'data.json';
+const TOKEN_KEY = 'github_token';
+
+// ===== STATE =====
+let appData = null;
+let dataSha = null;
+let currentUser = null;
+let teacherTaskStudent = '__default__'; // '__default__' or student name
+
+// ===== TOKEN =====
+function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
+function hasToken() { return !!getToken(); }
+function getApiBase() { return `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_PATH}`; }
+function getApiHeaders() { return { 'Authorization': `token ${getToken()}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' }; }
+
+// ===== DEFAULT TASK POOLS =====
+const defaultTasks = {
+  homework: ['抄写动词 essere 和 avere 的变位表，各写 3 遍','完成课本第 3 单元课后练习题 1-5','用所学词汇写 5 句话描述你的一天 (La mia giornata)','翻译以下句子：① 我叫Marco。② 我住在罗马。③ 我喜欢吃披萨。','整理本周学过的名词阴阳性规则，做一张表格','抄写数字 1-100 的意大利语写法','用 c\'è / ci sono 造 5 个句子'],
+  dictation: ['听写单词：casa, scuola, amico, libro, tavolo, penna, gatto, cane, fiore, sole','听写短句：Buongiorno! Come stai? Io sto bene, grazie.','听写颜色词：rosso, blu, verde, giallo, nero, bianco, rosa, arancione','听写家庭成员：madre, padre, fratello, sorella, nonno, nonna, zio, zia','听写食物词汇：pane, acqua, latte, frutta, verdura, carne, pesce, dolce','听写对话：—Ciao! —Ciao! —Come ti chiami? —Mi chiamo Sofia.','听写星期和月份：lunedì ~ domenica, gennaio ~ dicembre'],
+  recite: ['背诵动词 essere 变位：io sono, tu sei, lui/lei è, noi siamo, voi siete, loro sono','背诵意大利语字母表','背诵日常问候对话：打招呼 + 自我介绍 + 告别','背诵数字 1-20，要求流利说出','背诵 avere 变位：io ho, tu hai, lui/lei ha, noi abbiamo, voi avete, loro hanno','背诵一篇短课文（自选课本内容）','背诵定冠词规则：il, lo, la, i, gli, le 的用法'],
+  speaking: ['用意大利语做自我介绍，录视频或对着镜子练习','模拟餐厅点餐：Vorrei un caffè, per favore. 练习 3 遍','朗读并录音：一段意大利语短诗或课文','模拟问路：Scusi, dov\'è la stazione? 练习问答','用意大利语描述你的房间或教室，说出至少 8 个物品','角色扮演：在商店购物对话 (In negozio)','学唱一首简单的意大利语儿歌或童谣']
+};
+
+function getDefaultTask(cat, ds) {
+  let h=0; for(let i=0;i<ds.length;i++){h=((h<<5)-h)+ds.charCodeAt(i);h|=0;}
+  return defaultTasks[cat][Math.abs(h)%defaultTasks[cat].length];
+}
+
+function getInitialData() {
+  return {
+    users: { 'Antonio': { password: 'lanbeier0813', role: 'teacher' } },
+    dailyTasks: {},    // { date: { homework, dictation, recite, speaking } }  — 默认（全局）作业
+    studentTasks: {},  // { studentName: { date: { homework, dictation, recite, speaking } } }  — 按学生定制作业
+    checkins: {},
+    streaks: {}
+  };
+}
+
+// ===== GITHUB API =====
+async function fetchData() {
+  if(!hasToken()) throw new Error('NO_TOKEN');
+  const r=await fetch(getApiBase(),{headers:getApiHeaders()});
+  if(r.status===404){appData=getInitialData();await saveData('初始化');return;}
+  if(!r.ok) throw new Error('读取失败('+r.status+')');
+  const j=await r.json(); dataSha=j.sha;
+  appData=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+}
+
+async function saveData(msg) {
+  if(!hasToken()) throw new Error('NO_TOKEN');
+  const c=btoa(unescape(encodeURIComponent(JSON.stringify(appData,null,2))));
+  const b={message:msg,content:c}; if(dataSha) b.sha=dataSha;
+  const r=await fetch(getApiBase(),{method:'PUT',headers:getApiHeaders(),body:JSON.stringify(b)});
+  if(!r.ok){if(r.status===409){await fetchData();return saveData(msg+'(retry)');}throw new Error('保存失败('+r.status+')');}
+  const j=await r.json(); dataSha=j.content.sha;
+}
+
+// ===== LOCAL DATA =====
+const LK='italiano_local_data';
+function loadLocalData(){const r=localStorage.getItem(LK);return r?JSON.parse(r):getInitialData();}
+function saveLocalData(){localStorage.setItem(LK,JSON.stringify(appData));}
+
+// ===== GET TASK FOR STUDENT =====
+function getTaskForStudent(student, date, cat) {
+  // 1. Check per-student override
+  const st = appData.studentTasks || {};
+  if (st[student] && st[student][date] && st[student][date][cat]) return st[student][date][cat];
+  // 2. Fall back to global dailyTasks
+  const dt = appData.dailyTasks || {};
+  if (dt[date] && dt[date][cat]) return dt[date][cat];
+  // 3. Fall back to default pool
+  return getDefaultTask(cat, date);
+}
+
+// ===== LOADING & TOAST =====
+function showLoading(m){document.getElementById('loadingText').textContent=m||'加载中...';document.getElementById('loadingOverlay').style.display='flex';}
+function hideLoading(){document.getElementById('loadingOverlay').style.display='none';}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';t.classList.remove('hide');clearTimeout(t._t);t._t=setTimeout(()=>{t.classList.add('hide');setTimeout(()=>t.style.display='none',300)},2000);}
+
+// ===== PAGES =====
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+// ===== AUTH =====
+function showRegister(){document.getElementById('regError').textContent='';document.getElementById('regUser').value='';document.getElementById('regPass').value='';document.getElementById('regPass2').value='';showPage('registerPage');}
+function showLogin(){document.getElementById('loginError').textContent='';document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';showPage('loginPage');}
+
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const e=document.getElementById('loginError'); e.textContent='';
+  if(!u||!p){e.textContent='请输入用户名和密码';return;}
+  showLoading('登录中...');
+  try{
+    const ld=loadLocalData();
+    const user=ld.users[u];
+    if(!user){e.textContent='用户不存在';hideLoading();return;}
+    if(user.password!==p){e.textContent='密码错误';hideLoading();return;}
+    currentUser={username:u,role:user.role};
+    appData=ld;
+    if(user.role==='teacher'){
+      if(hasToken()){try{await fetchData();}catch(x){}}
+      showTeacherPage();
+    }else{
+      if(hasToken()){try{await fetchData();}catch(x){}}
+      showStudentPage();
+    }
+    hideLoading();
+  }catch(x){e.textContent='网络错误，请重试';hideLoading();}
+}
+
+async function doRegister(){
+  const u=document.getElementById('regUser').value.trim();
+  const p=document.getElementById('regPass').value;
+  const p2=document.getElementById('regPass2').value;
+  const e=document.getElementById('regError'); e.textContent='';
+  if(!u||!p){e.textContent='请填写完整';return;}
+  if(p.length<4){e.textContent='密码至少4位';return;}
+  if(p!==p2){e.textContent='两次密码不一致';return;}
+  if(u.toLowerCase()==='antonio'){e.textContent='该用户名为教师保留';return;}
+  showLoading('注册中...');
+  try{
+    if(hasToken()){try{await fetchData();}catch(x){appData=loadLocalData();}}else{appData=loadLocalData();}
+    if(appData.users[u]){e.textContent='用户名已存在';hideLoading();return;}
+    appData.users[u]={password:p,role:'student'};
+    if(hasToken()){try{await saveData('注册学生:'+u);}catch(x){saveLocalData();}}else{saveLocalData();}
+    showToast('✅ 注册成功！请登录');showLogin();hideLoading();
+  }catch(x){e.textContent='网络错误，请重试';hideLoading();}
+}
+
+function doLogout(){currentUser=null;appData=null;dataSha=null;showPage('loginPage');document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';document.getElementById('loginError').textContent='';}
+
+// ===== TEACHER =====
+function showTeacherPage(){
+  showPage('teacherPage');
+  document.getElementById('teacherNameTag').textContent=currentUser.username+'（教师）';
+  updateSyncStatus();
+  switchTeacherTabUI('students');
+  renderTeacherStudents();
+  renderTeacherTasks();
+  renderTeacherSettings();
+}
+
+async function refreshTeacherData(){
+  if(!hasToken())return;
+  try{await fetchData();updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+}
+
+function updateSyncStatus(ok){
+  const el=document.getElementById('syncStatus');
+  if(ok===true){el.textContent='✅ 已同步 '+new Date().toLocaleTimeString();el.className='sync-status ok';}
+  else if(ok===false){el.textContent='⚠️ 同步失败，使用本地缓存';el.className='sync-status error';}
+  else{el.textContent='⚙️ 请在设置中配置 GitHub Token';el.className='sync-status';}
+}
+
+function switchTeacherTab(tab){
+  switchTeacherTabUI(tab);
+  if(tab==='students')renderTeacherStudents();
+  if(tab==='tasks')renderTeacherTasks();
+  if(tab==='settings')renderTeacherSettings();
+}
+
+function switchTeacherTabUI(tab){
+  document.querySelectorAll('#teacherPage .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#teacherPage .tab-content').forEach(c=>c.classList.remove('active'));
+  const map={students:0,tasks:1,settings:2};
+  document.querySelectorAll('#teacherPage .tab-btn')[map[tab]].classList.add('active');
+  document.getElementById('teacherTab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+}
+
+function renderTeacherStudents(){
+  const el=document.getElementById('teacherTabStudents');
+  const students=Object.entries(appData.users).filter(([,v])=>v.role==='student');
+  if(students.length===0){el.innerHTML='<div class="empty-state"><div class="icon">📭</div>还没有学生注册<br><span style="font-size:12px;">让学生注册账号后即可在此查看</span></div>';return;}
+  const today=getToday();
+  el.innerHTML=students.map(([name])=>{
+    const ci=(appData.checkins[name]||{})[today]||{};
+    const st=appData.streaks[name]||{};
+    const dc=['homework','dictation','recite','speaking'].filter(k=>ci[k]).length;
+    const ad=dc===4;
+    return`<div class="student-card" onclick="showStudentDetail('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}</div><span style="font-size:12px;color:#888;">今日 ${dc}/4</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> 天</span><span>🌹 <b>${st.flowers||0}</b> 朵</span></div><div class="s-today">${['homework','dictation','recite','speaking'].map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>`;
+  }).join('')+'<div id="studentDetailArea" style="margin-top:16px;"></div>';
+}
+
+function showStudentDetail(name){
+  const area=document.getElementById('studentDetailArea');
+  const cis=appData.checkins[name]||{};
+  const st=appData.streaks[name]||{streak:0,flowers:0};
+  const dates=Object.keys(cis).sort().reverse().slice(0,14);
+  area.innerHTML=`<div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>📋 ${name} 的打卡记录</b><span style="font-size:11px;color:#888;">🔥${st.streak}天 🌹${st.flowers}朵</span></div>${dates.length===0?'<div class="empty-state" style="padding:20px">暂无打卡记录</div>':dates.map(date=>{const r=cis[date];const done=['homework','dictation','recite','speaking'].filter(k=>r[k]).length;const d=new Date(date+'T00:00:00');const wd=['日','一','二','三','四','五','六'][d.getDay()];return`<div class="history-item"><div><b>${d.getMonth()+1}/${d.getDate()} 周${wd}</b><div class="date">${done}/4</div></div><div style="display:flex;gap:4px">${r.homework?'<span class="badge hw">📝</span>':'<span style="color:#ddd">📝</span>'}${r.dictation?'<span class="badge dt">👂</span>':'<span style="color:#ddd">👂</span>'}${r.recite?'<span class="badge rc">📖</span>':'<span style="color:#ddd">📖</span>'}${r.speaking?'<span class="badge sp">🗣️</span>':'<span style="color:#ddd">🗣️</span>'}</div></div>`;}).join('')}<button class="btn-sm outline" style="margin-top:10px;width:100%" onclick="document.getElementById('studentDetailArea').innerHTML=''">收起</button></div>`;
+}
+
+function renderTeacherTasks(){
+  const el=document.getElementById('teacherTabTasks');
+  const students=Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([n])=>n);
+  const today=getToday();
+
+  // Determine which tasks to load based on selected student
+  let tasks={};
+  const st=appData.studentTasks||{};
+  if(teacherTaskStudent==='__default__'){
+    tasks=appData.dailyTasks[today]||{};
+  }else{
+    tasks=(st[teacherTaskStudent]||{})[today]||{};
+  }
+
+  el.innerHTML=`
+    <div class="task-editor">
+      <div style="background:#fffbe6;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#996;line-height:1.5">
+        💡 <b>默认作业</b>适用于所有学生。选择具体学生可为其单独定制作业，未定制的学生将使用默认作业。
+      </div>
+      <div class="row">
+        <select id="taskStudent" onchange="changeTaskStudent()">
+          <option value="__default__" ${teacherTaskStudent==='__default__'?'selected':''}>📋 默认作业（所有学生）</option>
+          ${students.map(s=>`<option value="${s}" ${teacherTaskStudent===s?'selected':''}>👤 ${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="row">
+        <input type="date" id="taskDate" value="${today}" onchange="loadTaskForDate()">
+        <button class="btn-sm primary" onclick="saveTeacherTasks()">💾 保存</button>
+      </div>
+      <div class="cat-label">📝 作业 · Compiti</div>
+      <textarea id="editHomework" placeholder="输入今日作业内容...">${tasks.homework||getDefaultTask('homework',today)}</textarea>
+      <div class="cat-label">👂 听写 · Dettato</div>
+      <textarea id="editDictation" placeholder="输入今日听写内容...">${tasks.dictation||getDefaultTask('dictation',today)}</textarea>
+      <div class="cat-label">📖 背诵 · Recitazione</div>
+      <textarea id="editRecite" placeholder="输入今日背诵内容...">${tasks.recite||getDefaultTask('recite',today)}</textarea>
+      <div class="cat-label">🗣️ 口语 · Conversazione</div>
+      <textarea id="editSpeaking" placeholder="输入今日口语内容...">${tasks.speaking||getDefaultTask('speaking',today)}</textarea>
+      <button class="btn-sm primary" style="width:100%;padding:12px;font-size:15px;margin-top:8px" onclick="saveTeacherTasks()">💾 保存作业</button>
+    </div>`;
+}
+
+function changeTaskStudent(){
+  teacherTaskStudent=document.getElementById('taskStudent').value;
+  loadTaskForDate();
+}
+
+function loadTaskForDate(){
+  const date=document.getElementById('taskDate').value;
+  let tasks={};
+  if(teacherTaskStudent==='__default__'){
+    tasks=appData.dailyTasks[date]||{};
+  }else{
+    const st=appData.studentTasks||{};
+    tasks=(st[teacherTaskStudent]||{})[date]||{};
+  }
+  document.getElementById('editHomework').value=tasks.homework||getDefaultTask('homework',date);
+  document.getElementById('editDictation').value=tasks.dictation||getDefaultTask('dictation',date);
+  document.getElementById('editRecite').value=tasks.recite||getDefaultTask('recite',date);
+  document.getElementById('editSpeaking').value=tasks.speaking||getDefaultTask('speaking',date);
+}
+
+async function saveTeacherTasks(){
+  const date=document.getElementById('taskDate').value;
+  const tasks={
+    homework:document.getElementById('editHomework').value.trim(),
+    dictation:document.getElementById('editDictation').value.trim(),
+    recite:document.getElementById('editRecite').value.trim(),
+    speaking:document.getElementById('editSpeaking').value.trim()
+  };
+
+  if(teacherTaskStudent==='__default__'){
+    if(!appData.dailyTasks[date])appData.dailyTasks[date]={};
+    Object.assign(appData.dailyTasks[date],tasks);
+  }else{
+    if(!appData.studentTasks)appData.studentTasks={};
+    if(!appData.studentTasks[teacherTaskStudent])appData.studentTasks[teacherTaskStudent]={};
+    if(!appData.studentTasks[teacherTaskStudent][date])appData.studentTasks[teacherTaskStudent][date]={};
+    Object.assign(appData.studentTasks[teacherTaskStudent][date],tasks);
+  }
+
+  saveLocalData();
+  const studentLabel=teacherTaskStudent==='__default__'?'默认':'学生 '+teacherTaskStudent;
+  if(hasToken()){
+    showLoading('同步中...');
+    try{await saveData(`编辑 ${date} ${studentLabel} 作业`);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+    hideLoading();
+  }
+  showToast(`✅ ${studentLabel} 的 ${date} 作业已保存`+(hasToken()?'并同步':'（本地）'));
+}
+
+function renderTeacherSettings(){
+  const el=document.getElementById('teacherTabSettings');
+  const users=Object.entries(appData.users);
+  const token=getToken();
+
+  let ts=token?`<div class="settings-card"><h4>🔑 GitHub Token</h4><div style="display:flex;align-items:center;gap:10px"><span style="color:#009246;font-weight:600;">✅ 已配置</span><span style="font-size:11px;color:#888;">${token.substring(0,8)}...</span><button class="btn-sm outline" onclick="clearToken()">更换</button></div><div class="hint">Token 仅保存在你的浏览器中，不会上传。</div></div>`
+  :`<div class="settings-card" style="border:2px solid #ff9800;"><h4>⚠️ 请配置 GitHub Token</h4><div class="hint" style="margin-bottom:10px;">数据同步需要 GitHub Personal Access Token。<br><a href="https://github.com/settings/tokens" target="_blank" style="color:#009246;">点击生成 Token</a> → 选 <b>Generate new token (classic)</b> → 勾选 <b>repo</b> → 粘贴到下方。</div><div class="row"><input type="password" id="tokenInput" placeholder="ghp_..." style="flex:1"><button class="btn-sm primary" onclick="saveToken()">保存</button></div><div class="hint">不配置 Token 也可以使用，但数据只保存在本地浏览器。</div></div>`;
+
+  el.innerHTML=ts+`
+    <div class="settings-card"><h4>➕ 添加教师账号</h4><div class="row"><input type="text" id="newTeacherUser" placeholder="教师用户名" style="flex:1" autocapitalize="none"><input type="password" id="newTeacherPass" placeholder="密码" style="flex:1"><button class="btn-sm primary" onclick="addTeacher()">添加</button></div></div>
+    <div class="settings-card"><h4>👤 所有用户</h4>${users.map(([name,info])=>`<div class="user-list-item"><div><b>${name}</b> <span class="role-tag ${info.role}">${info.role==='teacher'?'教师':'学生'}</span></div>${name!=='Antonio'?`<button class="btn-sm danger" onclick="deleteUser('${name}')">删除</button>`:'<span style="font-size:11px;color:#999">主管理员</span>'}</div>`).join('')}</div>
+  `;
+  updateSyncStatus();
+}
+
+async function saveToken(){
+  const t=document.getElementById('tokenInput').value.trim();
+  if(!t){showToast('请输入 Token');return;}
+  setToken(t);
+  showLoading('验证 Token...');
+  try{await fetchData();updateSyncStatus(true);showToast('✅ Token 配置成功，数据已同步！');}
+  catch(e){
+    try{await saveData('初始化数据');updateSyncStatus(true);showToast('✅ Token 配置成功！');}
+    catch(e2){setToken('');showToast('❌ Token 无效，请检查');updateSyncStatus(false);}
+  }
+  hideLoading();renderTeacherSettings();
+}
+
+function clearToken(){if(confirm('确定移除 Token？')){setToken('');updateSyncStatus();renderTeacherSettings();}}
+
+async function addTeacher(){
+  const u=document.getElementById('newTeacherUser').value.trim();
+  const p=document.getElementById('newTeacherPass').value;
+  if(!u||!p){showToast('请填写完整');return;}
+  if(p.length<4){showToast('密码至少4位');return;}
+  if(appData.users[u]){showToast('用户名已存在');return;}
+  appData.users[u]={password:p,role:'teacher'};saveLocalData();
+  if(hasToken()){showLoading('同步中...');try{await saveData('添加教师:'+u);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}hideLoading();}
+  showToast('✅ 教师账号已添加');renderTeacherSettings();
+}
+
+async function deleteUser(name){
+  if(!confirm(`确定删除用户 "${name}" 吗？此操作不可恢复。`))return;
+  delete appData.users[name];delete appData.checkins[name];delete appData.streaks[name];
+  if(appData.studentTasks)delete appData.studentTasks[name];
+  saveLocalData();
+  if(hasToken()){showLoading('同步中...');try{await saveData('删除用户:'+name);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}hideLoading();}
+  showToast('✅ 已删除');renderTeacherSettings();
+}
+
+// ===== STUDENT =====
+function showStudentPage(){
+  showPage('studentPage');
+  document.getElementById('studentNameTag').textContent=currentUser.username;
+  refreshStudentUI();
+}
+
+function refreshStudentUI(){
+  renderStudentTasks();
+  updateStudentStats();
+  renderFlowers();
+  renderHistory();
+}
+
+function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function formatDate(ds){const d=new Date(ds+'T00:00:00');return`${d.getMonth()+1}月${d.getDate()}日 周${['日','一','二','三','四','五','六'][d.getDay()]}`;}
+
+function renderStudentTasks(){
+  const today=getToday();
+  if(!appData.checkins[currentUser.username])appData.checkins[currentUser.username]={};
+  if(!appData.checkins[currentUser.username][today])appData.checkins[currentUser.username][today]={homework:false,dictation:false,recite:false,speaking:false};
+  const ci=appData.checkins[currentUser.username][today];
+
+  const cfgs=[{key:'homework',icon:'📝',name:'作业 · Compiti',cls:'hw'},{key:'dictation',icon:'👂',name:'听写 · Dettato',cls:'dt'},{key:'recite',icon:'📖',name:'背诵 · Recitazione',cls:'rc'},{key:'speaking',icon:'🗣️',name:'口语 · Conversazione',cls:'sp'}];
+
+  document.getElementById('taskList').innerHTML=cfgs.map(c=>{
+    const done=ci[c.key];
+    const content=getTaskForStudent(currentUser.username,today,c.key);
+    return`<div class="task-card ${done?'checked':''}"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content">${content}</div></div><button class="check-btn ${done?'done':''}" onclick="toggleStudentTask('${c.key}')">${done?'✅':'○'}</button></div>`;
+  }).join('');
+}
+
+async function toggleStudentTask(key){
+  const today=getToday();
+  const ci=appData.checkins[currentUser.username][today];
+  if(ci[key])return;
+  ci[key]=true;
+  const allDone=Object.values(ci).every(v=>v===true);
+  if(allDone)updateStreak();
+  saveLocalData();
+  if(hasToken()){showLoading('同步中...');try{await saveData(`${currentUser.username} 打卡 ${key}`);}catch(e){}hideLoading();}
+  showToast(`✅ ${{homework:'作业',dictation:'听写',recite:'背诵',speaking:'口语'}[key]} 打卡成功！`);
+  if(allDone){setTimeout(()=>spawnConfetti(),100);setTimeout(()=>showToast('🎉 今日全部完成！太棒了！'),800);}
+  refreshStudentUI();
+}
+
+function updateStreak(){
+  const today=getToday();
+  if(!appData.streaks[currentUser.username])appData.streaks[currentUser.username]={streak:0,flowers:0,lastCheckinDate:null};
+  const s=appData.streaks[currentUser.username];
+  const y=new Date();y.setDate(y.getDate()-1);const ys=y.toISOString().split('T')[0];
+  if(s.lastCheckinDate===ys)s.streak+=1;
+  else if(s.lastCheckinDate===today)return;
+  else s.streak=1;
+  s.lastCheckinDate=today;
+  if(s.streak>0&&s.streak%5===0){s.flowers+=1;saveLocalData();setTimeout(()=>showToast('🌹 连续打卡 5 天！获得 1 朵小红花！'),1500);}
+}
+
+function updateStudentStats(){
+  const s=appData.streaks[currentUser.username]||{streak:0,flowers:0};
+  document.getElementById('streakCount').textContent=s.streak||0;
+  document.getElementById('flowerCount').textContent=s.flowers||0;
+  document.getElementById('todayDate').textContent=formatDate(getToday());
+  const today=getToday();
+  const ci=(appData.checkins[currentUser.username]||{})[today]||{};
+  const dc=Object.values(ci).filter(v=>v===true).length;
+  document.getElementById('progressText').textContent=`${dc}/4`;
+  document.getElementById('progressFill').style.width=`${(dc/4)*100}%`;
+}
+
+function renderFlowers(){
+  const s=appData.streaks[currentUser.username]||{streak:0,flowers:0};
+  const row=document.getElementById('flowerRow');
+  const msg=document.getElementById('flowerMsg');
+  if(s.flowers===0){row.innerHTML='<span style="color:#ccc;font-size:28px;">🌹</span><span style="color:#ddd;font-size:28px;">🌹</span>';msg.textContent='还没有小红花，加油连续打卡 5 天吧！💪';}
+  else{row.innerHTML=Array(Math.min(s.flowers,20)).fill('<span class="flower">🌹</span>').join('');const nm=(Math.floor(s.streak/5)+1)*5;msg.textContent=`已获 ${s.flowers} 朵 · 再连续 ${nm-s.streak} 天得下一朵！🎯`;}
+}
+
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  const cis=appData.checkins[currentUser.username]||{};
+  const dates=Object.keys(cis).sort().reverse().slice(0,14);
+  if(dates.length===0){el.innerHTML='<div style="text-align:center;color:#bbb;padding:20px;font-size:13px;">还没有打卡记录，今天开始吧！💪</div>';return;}
+  el.innerHTML=dates.map(date=>{const r=cis[date];const ad=Object.values(r).every(v=>v===true);const dc=Object.values(r).filter(v=>v===true).length;let bd='';if(r.homework)bd+='<span class="badge hw">📝作业</span>';if(r.dictation)bd+='<span class="badge dt">👂听写</span>';if(r.recite)bd+='<span class="badge rc">📖背诵</span>';if(r.speaking)bd+='<span class="badge sp">🗣️口语</span>';return`<div class="history-item" style="${date===getToday()?'border-left:3px solid #009246;':''}"><div><b>${formatDate(date)}</b> ${date===getToday()?'🟢':''} ${ad?'🌟':''}<div class="date">${dc}/4</div></div><div style="display:flex;gap:4px;flex-wrap:wrap">${bd||'<span style="color:#ccc;font-size:11px;">未打卡</span>'}</div></div>`;}).join('');
+}
+
+// ===== CONFETTI =====
+function spawnConfetti(){const c=document.getElementById('confettiContainer');const em=['🎉','🌟','✨','🇮🇹','🍕','🎊','💚','🤍','❤️','🌹','⭐','🎈'];for(let i=0;i<30;i++){const p=document.createElement('span');p.className='confetti-piece';p.textContent=em[Math.floor(Math.random()*em.length)];p.style.left=Math.random()*100+'%';p.style.animationDuration=(Math.random()*2+2)+'s';p.style.animationDelay=Math.random()*.5+'s';c.appendChild(p);setTimeout(()=>p.remove(),3500);}}
+
+// ===== PWA INSTALL =====
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();deferredPrompt=e;document.querySelectorAll('.install-banner').forEach(b=>b.classList.add('show'));});
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{if(r.outcome==='accepted'){document.querySelectorAll('.install-banner').forEach(b=>b.classList.remove('show'));}deferredPrompt=null;});}else{showToast('📲 请使用浏览器的"添加到主屏幕"功能');}}
+window.addEventListener('appinstalled',()=>{deferredPrompt=null;document.querySelectorAll('.install-banner').forEach(b=>b.classList.remove('show'));});
+
+// ===== SERVICE WORKER =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/italiano-checkin/sw.js').then(()=>console.log('SW registered')).catch(()=>{});
+}
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){if(document.getElementById('loginPage').classList.contains('active'))doLogin();if(document.getElementById('registerPage').classList.contains('active'))doRegister();}});
+
+// ===== INIT =====
+showPage('loginPage');
+</script>
+</body>
+</html>
