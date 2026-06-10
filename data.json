@@ -3,6 +3,10 @@
     "toni": {
       "password": "123456",
       "role": "teacher"
+    },
+    "a": {
+      "password": "aaaa",
+      "role": "student"
     }
   },
   "dailyTasks": {},
