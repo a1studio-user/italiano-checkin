@@ -533,14 +533,18 @@ async function doLogin(){
   if(!u||!p){e.textContent=_('errorFill');return;}
   showLoading(_('loading'));
   try{
-    const ld=loadLocalData();
+    let ld=loadLocalData();
     if(ld.users['Antonio']&&!ld.users['toni']){ld.users['toni']=ld.users['Antonio'];delete ld.users['Antonio'];saveLocalData();}
-    const user=ld.users[u];
+    let user=ld.users[u];
+    // 本地没找到但有Token时，先尝试从GitHub拉最新数据
+    if(!user&&hasToken()){
+      try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];ld=appData;user=ld.users[u];saveLocalData();}catch(x){}
+    }
     if(!user){e.textContent=_('errorNotFound');hideLoading();return;}
     if(user.password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
     currentUser={username:u,role:user.role};appData=ld;
     if(!appData.chatMessages)appData.chatMessages=[];
-    if(hasToken()){try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];}catch(x){}}
+    if(hasToken()&&!appData._fetched){try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];}catch(x){}}
     if(user.role==='teacher')showTeacherPage();else showStudentPage();
     hideLoading();
   }catch(x){e.textContent=_('errorNetwork');hideLoading();}
