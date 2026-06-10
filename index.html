@@ -282,7 +282,7 @@ const I18N = {
     errorFill:'请输入用户名和密码', errorPassShort:'密码至少4位', errorPassMismatch:'两次密码不一致',
     errorReserved:'该用户名为教师保留', errorUserExists:'用户名已存在', errorNotFound:'用户不存在',
     errorWrongPass:'密码错误', errorNetwork:'网络错误，请重试',
-    regSuccess:'✅ 注册成功！请登录',
+    regSuccess:'✅ 注册成功！请登录', regSuccessNoSync:'✅ 注册成功！（教师端配置Token后可同步）',
     teacherHeader:'👨‍🏫 教师端', studentHeader:'🇮🇹 Il Mio Diario Estivo',
     tnav_students:'学生', tnav_tasks:'作业', tnav_podium:'排行榜', tnav_chat:'聊天', tnav_settings:'设置',
     snav_tasks:'作业', snav_podium:'排行榜', snav_chat:'聊天', snav_settings:'设置',
@@ -327,7 +327,7 @@ const I18N = {
     errorFill:'Please fill in username and password', errorPassShort:'Password must be at least 4 characters', errorPassMismatch:'Passwords do not match',
     errorReserved:'This username is reserved for teachers', errorUserExists:'Username already exists', errorNotFound:'User not found',
     errorWrongPass:'Wrong password', errorNetwork:'Network error, please retry',
-    regSuccess:'✅ Registered! Please login',
+    regSuccess:'✅ Registered! Please login', regSuccessNoSync:'✅ Registered! (Sync after teacher configures Token)',
     teacherHeader:'👨‍🏫 Teacher', studentHeader:'🇮🇹 Il Mio Diario Estivo',
     tnav_students:'Students', tnav_tasks:'Tasks', tnav_podium:'Podium', tnav_chat:'Chat', tnav_settings:'Settings',
     snav_tasks:'Tasks', snav_podium:'Podium', snav_chat:'Chat', snav_settings:'Settings',
@@ -372,7 +372,7 @@ const I18N = {
     errorFill:'Inserisci nome utente e password', errorPassShort:'La password deve avere almeno 4 caratteri', errorPassMismatch:'Le password non corrispondono',
     errorReserved:'Nome utente riservato agli insegnanti', errorUserExists:'Nome utente già esistente', errorNotFound:'Utente non trovato',
     errorWrongPass:'Password errata', errorNetwork:'Errore di rete, riprova',
-    regSuccess:'✅ Registrato! Accedi',
+    regSuccess:'✅ Registrato! Accedi', regSuccessNoSync:'✅ Registrato! (Sincronizza dopo che l\'insegnante configura il Token)',
     teacherHeader:'👨‍🏫 Insegnante', studentHeader:'🇮🇹 Il Mio Diario Estivo',
     tnav_students:'Studenti', tnav_tasks:'Compiti', tnav_podium:'Podio', tnav_chat:'Chat', tnav_settings:'Impostazioni',
     snav_tasks:'Compiti', snav_podium:'Podio', snav_chat:'Chat', snav_settings:'Impostazioni',
@@ -474,6 +474,30 @@ function setToken(t){localStorage.setItem(TOKEN_KEY,t);}
 function hasToken(){return !!getToken();}
 function getApiBase(){return `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_PATH}`;}
 function getApiHeaders(){return{'Authorization':`token ${getToken()}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};}
+function getRawUrl(){return `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${DATA_PATH}`;}
+
+async function fetchData(){
+  // 优先用公开Raw URL（无需Token），新设备/学生也能加载
+  try{
+    const rr=await fetch(getRawUrl(),{cache:'no-cache'});
+    if(rr.ok){
+      appData=JSON.parse(await rr.text());
+      if(!appData.chatMessages)appData.chatMessages=[];
+      if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
+      saveLocalData();
+      return;
+    }
+  }catch(e){}
+  // Raw失败时回退到API（需要Token）
+  if(!hasToken())throw new Error('无法加载数据，请检查网络');
+  const r=await fetch(getApiBase(),{headers:getApiHeaders()});
+  if(r.status===404){appData=getInitialData();await saveData('初始化');return;}
+  if(!r.ok)throw new Error('读取失败('+r.status+')');
+  const j=await r.json();dataSha=j.sha;
+  appData=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+  if(!appData.chatMessages)appData.chatMessages=[];
+  if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
+}
 
 const defaultTasks={
   homework:['抄写动词 essere 和 avere 的变位表，各写 3 遍','完成课本第 3 单元课后练习题 1-5','用所学词汇写 5 句话描述你的一天 (La mia giornata)','翻译以下句子：① 我叫Marco。② 我住在罗马。③ 我喜欢吃披萨。','整理本周学过的名词阴阳性规则，做一张表格','抄写数字 1-100 的意大利语写法','用 c\'è / ci sono 造 5 个句子'],
@@ -485,17 +509,6 @@ const defaultTasks={
 function getDefaultTask(cat,ds){let h=0;for(let i=0;i<ds.length;i++){h=((h<<5)-h)+ds.charCodeAt(i);h|=0;}return defaultTasks[cat][Math.abs(h)%defaultTasks[cat].length];}
 
 function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[]};}
-
-async function fetchData(){
-  if(!hasToken())throw new Error('NO_TOKEN');
-  const r=await fetch(getApiBase(),{headers:getApiHeaders()});
-  if(r.status===404){appData=getInitialData();await saveData('初始化');return;}
-  if(!r.ok)throw new Error('读取失败('+r.status+')');
-  const j=await r.json();dataSha=j.sha;
-  appData=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
-  if(!appData.chatMessages)appData.chatMessages=[];
-  if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
-}
 
 async function saveData(msg){
   if(!hasToken())throw new Error('NO_TOKEN');
@@ -533,19 +546,12 @@ async function doLogin(){
   if(!u||!p){e.textContent=_('errorFill');return;}
   showLoading(_('loading'));
   try{
-    let ld=loadLocalData();
-    if(ld.users['Antonio']&&!ld.users['toni']){ld.users['toni']=ld.users['Antonio'];delete ld.users['Antonio'];saveLocalData();}
-    let user=ld.users[u];
-    // 本地没找到但有Token时，先尝试从GitHub拉最新数据
-    if(!user&&hasToken()){
-      try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];ld=appData;user=ld.users[u];saveLocalData();}catch(x){}
-    }
-    if(!user){e.textContent=_('errorNotFound');hideLoading();return;}
-    if(user.password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
-    currentUser={username:u,role:user.role};appData=ld;
-    if(!appData.chatMessages)appData.chatMessages=[];
-    if(hasToken()&&!appData._fetched){try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];}catch(x){}}
-    if(user.role==='teacher')showTeacherPage();else showStudentPage();
+    // 优先从GitHub拉最新数据（Raw URL无需Token），失败用本地缓存
+    try{await fetchData();}catch(x){appData=loadLocalData();if(!appData.chatMessages)appData.chatMessages=[];}
+    if(!appData.users[u]){e.textContent=_('errorNotFound');hideLoading();return;}
+    if(appData.users[u].password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
+    currentUser={username:u,role:appData.users[u].role};
+    if(currentUser.role==='teacher')showTeacherPage();else showStudentPage();
     hideLoading();
   }catch(x){e.textContent=_('errorNetwork');hideLoading();}
 }
@@ -560,11 +566,11 @@ async function doRegister(){
   if(reserved.includes(u.toLowerCase())){e.textContent=_('errorReserved');return;}
   showLoading(_('loading'));
   try{
-    if(hasToken()){try{await fetchData();}catch(x){appData=loadLocalData();}}else{appData=loadLocalData();}
+    try{await fetchData();}catch(x){appData=loadLocalData();}
     if(!appData.chatMessages)appData.chatMessages=[];
     if(appData.users[u]){e.textContent=_('errorUserExists');hideLoading();return;}
     appData.users[u]={password:p,role:'student'};
-    if(hasToken()){try{await saveData('注册学生:'+u);}catch(x){saveLocalData();}}else{saveLocalData();}
+    if(hasToken()){try{await saveData('注册学生:'+u);}catch(x){saveLocalData();}}else{saveLocalData();showToast(_('regSuccessNoSync'));showLogin();hideLoading();return;}
     showToast(_('regSuccess'));showLogin();hideLoading();
   }catch(x){e.textContent=_('errorNetwork');hideLoading();}
 }
