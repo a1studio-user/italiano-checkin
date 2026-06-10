@@ -475,28 +475,56 @@ function hasToken(){return !!getToken();}
 function getApiBase(){return `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_PATH}`;}
 function getApiHeaders(){return{'Authorization':`token ${getToken()}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'};}
 function getRawUrl(){return `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${DATA_PATH}`;}
+function getMirrorUrls(){
+  return [
+    location.origin+'/italiano-checkin/'+DATA_PATH,
+    `https://lanbeier0813.github.io/italiano-checkin/${DATA_PATH}`,
+    `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${DATA_PATH}`,
+    `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@main/${DATA_PATH}`,
+  ];
+}
+
+async function fetchFromUrl(url){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),5000);
+  try{
+    const r=await fetch(url,{cache:'no-cache',signal:ctrl.signal});
+    if(r.ok)return await r.text();
+  }catch(e){}finally{clearTimeout(t);}
+  return null;
+}
 
 async function fetchData(){
-  // 优先用公开Raw URL（无需Token），新设备/学生也能加载
-  try{
-    const rr=await fetch(getRawUrl(),{cache:'no-cache'});
-    if(rr.ok){
-      appData=JSON.parse(await rr.text());
-      if(!appData.chatMessages)appData.chatMessages=[];
-      if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
-      saveLocalData();
-      return;
+  // 多源尝试拉取数据（国内网络 raw.githubusercontent.com 可能不通）
+  for(const url of getMirrorUrls()){
+    const text=await fetchFromUrl(url);
+    if(text){
+      try{
+        appData=JSON.parse(text);
+        if(!appData.chatMessages)appData.chatMessages=[];
+        if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
+        saveLocalData();
+        return;
+      }catch(e){}
     }
-  }catch(e){}
-  // Raw失败时回退到API（需要Token）
-  if(!hasToken())throw new Error('无法加载数据，请检查网络');
-  const r=await fetch(getApiBase(),{headers:getApiHeaders()});
-  if(r.status===404){appData=getInitialData();await saveData('初始化');return;}
-  if(!r.ok)throw new Error('读取失败('+r.status+')');
-  const j=await r.json();dataSha=j.sha;
-  appData=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
-  if(!appData.chatMessages)appData.chatMessages=[];
-  if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
+  }
+  // 所有镜像都失败，尝试API（需要Token）
+  if(hasToken()){
+    try{
+      const r=await fetch(getApiBase(),{headers:getApiHeaders()});
+      if(r.status===404){appData=getInitialData();await saveData('初始化');return;}
+      if(r.ok){
+        const j=await r.json();dataSha=j.sha;
+        appData=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+        if(!appData.chatMessages)appData.chatMessages=[];
+        if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
+        saveLocalData();
+        return;
+      }
+    }catch(e){}
+  }
+  // 全部失败，用本地缓存
+  appData=loadLocalData();
 }
 
 const defaultTasks={
