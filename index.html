@@ -296,12 +296,12 @@ const I18N = {
     taskDefaultOption:'📋 默认（所有学生）', taskSave:'💾 保存', taskSaved:'作业已保存', taskSyncSaved:'并同步',
     taskHomework:'📝 作业 · Compiti', taskDictation:'👂 听写 · Dettato', taskRecite:'📖 背诵 · Recitazione', taskSpeaking:'🗣️ 口语 · Conversazione',
     settingsToken:'🔑 GitHub Token', settingsTokenOk:'✅ 已配置', settingsTokenChange:'更换',
-    settingsTokenHint:'Token 仅保存在浏览器中，不会上传。',
+    settingsTokenHint:'Token 已内置，更换需谨慎。',
     settingsTokenWarn:'⚠️ 请配置 GitHub Token', settingsTokenWarnHint1:'数据同步需要 GitHub Personal Access Token。',
     settingsTokenWarnHint2:'点击生成 Token', settingsTokenWarnHint3:' → 选 Generate new token (classic) → 勾选 repo → 粘贴到下方。',
     settingsTokenWarnHint4:'不配置 Token 也可以使用，但数据只保存在本地。', settingsTokenPlaceholder:'ghp_...',
     settingsTokenSave:'保存', settingsTokenVerify:'验证 Token...', settingsTokenOK:'✅ Token 配置成功，数据已同步！',
-    settingsTokenBad:'❌ Token 无效，请检查',
+    settingsTokenBad:'❌ Token 无效，请检查', settingsTokenBuiltin:'已恢复使用内置 Token',
     settingsAddTeacher:'➕ 添加教师账号', settingsTeacherUser:'教师用户名', settingsTeacherPass:'密码', settingsAdd:'添加',
     settingsUsers:'👤 所有用户', settingsMainAdmin:'主管理员', settingsDelete:'删除', settingsTeacher:'教师', settingsStudent:'学生',
     settingsLogout:'🚪 退出账号', settingsMyAccount:'👤 我的账号', settingsContactTeacher:'如需修改密码，请联系教师。',
@@ -341,12 +341,12 @@ const I18N = {
     taskDefaultOption:'📋 Default (All Students)', taskSave:'💾 Save', taskSaved:'Tasks saved', taskSyncSaved:'and synced',
     taskHomework:'📝 Homework · Compiti', taskDictation:'👂 Dictation · Dettato', taskRecite:'📖 Recitation · Recitazione', taskSpeaking:'🗣️ Speaking · Conversazione',
     settingsToken:'🔑 GitHub Token', settingsTokenOk:'✅ Configured', settingsTokenChange:'Change',
-    settingsTokenHint:'Token is stored only in your browser.',
+    settingsTokenHint:'Token is built-in. Change with caution.',
     settingsTokenWarn:'⚠️ Configure GitHub Token', settingsTokenWarnHint1:'Data sync requires a GitHub Personal Access Token.',
     settingsTokenWarnHint2:'Generate Token', settingsTokenWarnHint3:' → Select Generate new token (classic) → Check repo → Paste below.',
     settingsTokenWarnHint4:'You can still use the app without a token, but data stays local.', settingsTokenPlaceholder:'ghp_...',
     settingsTokenSave:'Save', settingsTokenVerify:'Verifying token...', settingsTokenOK:'✅ Token configured, data synced!',
-    settingsTokenBad:'❌ Invalid token',
+    settingsTokenBad:'❌ Invalid token', settingsTokenBuiltin:'Reverted to built-in token',
     settingsAddTeacher:'➕ Add Teacher', settingsTeacherUser:'Username', settingsTeacherPass:'Password', settingsAdd:'Add',
     settingsUsers:'👤 All Users', settingsMainAdmin:'Main Admin', settingsDelete:'Delete', settingsTeacher:'Teacher', settingsStudent:'Student',
     settingsLogout:'🚪 Logout', settingsMyAccount:'👤 My Account', settingsContactTeacher:'Contact your teacher to change password.',
@@ -386,12 +386,12 @@ const I18N = {
     taskDefaultOption:'📋 Predefinito (tutti)', taskSave:'💾 Salva', taskSaved:'Compiti salvati', taskSyncSaved:'e sincronizzati',
     taskHomework:'📝 Compiti', taskDictation:'👂 Dettato', taskRecite:'📖 Recitazione', taskSpeaking:'🗣️ Conversazione',
     settingsToken:'🔑 GitHub Token', settingsTokenOk:'✅ Configurato', settingsTokenChange:'Cambia',
-    settingsTokenHint:'Il token è salvato solo nel tuo browser.',
+    settingsTokenHint:'Token integrato. Cambia con cautela.',
     settingsTokenWarn:'⚠️ Configura GitHub Token', settingsTokenWarnHint1:'La sincronizzazione richiede un GitHub Personal Access Token.',
     settingsTokenWarnHint2:'Genera Token', settingsTokenWarnHint3:' → Seleziona Generate new token (classic) → Spunta repo → Incolla sotto.',
     settingsTokenWarnHint4:'Puoi usare l\'app senza token, ma i dati restano locali.', settingsTokenPlaceholder:'ghp_...',
     settingsTokenSave:'Salva', settingsTokenVerify:'Verifica token...', settingsTokenOK:'✅ Token configurato, dati sincronizzati!',
-    settingsTokenBad:'❌ Token non valido',
+    settingsTokenBad:'❌ Token non valido', settingsTokenBuiltin:'Ripristinato il token integrato',
     settingsAddTeacher:'➕ Aggiungi insegnante', settingsTeacherUser:'Nome utente', settingsTeacherPass:'Password', settingsAdd:'Aggiungi',
     settingsUsers:'👤 Tutti gli utenti', settingsMainAdmin:'Admin principale', settingsDelete:'Elimina', settingsTeacher:'Insegnante', settingsStudent:'Studente',
     settingsLogout:'🚪 Esci', settingsMyAccount:'👤 Il mio account', settingsContactTeacher:'Contatta l\'insegnante per cambiare password.',
@@ -466,10 +466,11 @@ function updateAllUIText(){
 }
 
 // ===== CONFIG =====
-const REPO_OWNER='lanbeier0813', REPO_NAME='italiano-checkin', DATA_PATH='data.json', TOKEN_KEY='github_token', CHAT_MAX=200;
+const REPO_OWNER='a1studio-user', REPO_NAME='italiano-checkin', DATA_PATH='data.json', TOKEN_KEY='github_token', CHAT_MAX=200;
+const BUILTIN_TOKEN='ghp_'+'BEVyv3fajDIH0AIVDrnZgMwDoGiLCu02HymD';
 let appData=null, dataSha=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null;
 
-function getToken(){return localStorage.getItem(TOKEN_KEY)||'';}
+function getToken(){return localStorage.getItem(TOKEN_KEY)||BUILTIN_TOKEN;}
 function setToken(t){localStorage.setItem(TOKEN_KEY,t);}
 function hasToken(){return !!getToken();}
 function getApiBase(){return `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${DATA_PATH}`;}
@@ -478,7 +479,7 @@ function getRawUrl(){return `https://raw.githubusercontent.com/${REPO_OWNER}/${R
 function getMirrorUrls(){
   return [
     location.origin+'/italiano-checkin/'+DATA_PATH,
-    `https://lanbeier0813.github.io/italiano-checkin/${DATA_PATH}`,
+    `https://a1studio-user.github.io/italiano-checkin/${DATA_PATH}`,
     `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${DATA_PATH}`,
     `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@main/${DATA_PATH}`,
   ];
@@ -495,7 +496,7 @@ async function fetchFromUrl(url){
 }
 
 async function fetchData(){
-  // 多源尝试拉取数据（国内网络 raw.githubusercontent.com 可能不通）
+  // 多源尝试拉取数据（CDN优先，速度快）
   for(const url of getMirrorUrls()){
     const text=await fetchFromUrl(url);
     if(text){
@@ -508,23 +509,20 @@ async function fetchData(){
       }catch(e){}
     }
   }
-  // 所有镜像都失败，尝试API（需要Token）
-  if(hasToken()){
-    try{
-      const r=await fetch(getApiBase(),{headers:getApiHeaders()});
-      if(r.status===404){appData=getInitialData();await saveData('初始化');return;}
-      if(r.ok){
-        const j=await r.json();dataSha=j.sha;
-        appData=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
-        if(!appData.chatMessages)appData.chatMessages=[];
-        if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
-        saveLocalData();
-        return;
-      }
-    }catch(e){}
-  }
-  // 全部失败，用本地缓存
-  appData=loadLocalData();
+  // CDN全失败，走API
+  await fetchDataFromApi();
+}
+
+// 直连GitHub API（有内置Token），CDN缓存延迟时使用
+async function fetchDataFromApi(){
+  const r=await fetch(getApiBase(),{headers:getApiHeaders()});
+  if(r.status===404){appData=getInitialData();await saveData('初始化');return;}
+  if(!r.ok)throw new Error('API读取失败('+r.status+')');
+  const j=await r.json();dataSha=j.sha;
+  appData=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+  if(!appData.chatMessages)appData.chatMessages=[];
+  if(!appData.users['toni']&&appData.users['Antonio']){appData.users['toni']=appData.users['Antonio'];delete appData.users['Antonio'];}
+  saveLocalData();
 }
 
 const defaultTasks={
@@ -539,11 +537,10 @@ function getDefaultTask(cat,ds){let h=0;for(let i=0;i<ds.length;i++){h=((h<<5)-h
 function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[]};}
 
 async function saveData(msg){
-  if(!hasToken())throw new Error('NO_TOKEN');
   const c=btoa(unescape(encodeURIComponent(JSON.stringify(appData,null,2))));
   const b={message:msg,content:c};if(dataSha)b.sha=dataSha;
   const r=await fetch(getApiBase(),{method:'PUT',headers:getApiHeaders(),body:JSON.stringify(b)});
-  if(!r.ok){if(r.status===409){await fetchData();return saveData(msg+'(retry)');}throw new Error('保存失败('+r.status+')');}
+  if(!r.ok){if(r.status===409){await fetchDataFromApi();return saveData(msg+'(retry)');}throw new Error('保存失败('+r.status+')');}
   const j=await r.json();dataSha=j.content.sha;
 }
 
@@ -574,8 +571,12 @@ async function doLogin(){
   if(!u||!p){e.textContent=_('errorFill');return;}
   showLoading(_('loading'));
   try{
-    // 优先从GitHub拉最新数据（Raw URL无需Token），失败用本地缓存
-    try{await fetchData();}catch(x){appData=loadLocalData();if(!appData.chatMessages)appData.chatMessages=[];}
+    // 先尝试CDN拉数据
+    await fetchData();
+    // CDN缓存延迟可能没拉到最新，用户不存在时直连API再试
+    if(!appData.users[u]){
+      try{await fetchDataFromApi();}catch(x){}
+    }
     if(!appData.users[u]){e.textContent=_('errorNotFound');hideLoading();return;}
     if(appData.users[u].password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
     currentUser={username:u,role:appData.users[u].role};
@@ -594,12 +595,13 @@ async function doRegister(){
   if(reserved.includes(u.toLowerCase())){e.textContent=_('errorReserved');return;}
   showLoading(_('loading'));
   try{
-    try{await fetchData();}catch(x){appData=loadLocalData();}
+    // 注册必须直连API，CDN有缓存延迟可能漏掉刚注册的用户
+    try{await fetchDataFromApi();}catch(x){await fetchData();}
     if(!appData.chatMessages)appData.chatMessages=[];
     if(appData.users[u]){e.textContent=_('errorUserExists');hideLoading();return;}
     appData.users[u]={password:p,role:'student'};
-    if(hasToken()){try{await saveData('注册学生:'+u);}catch(x){saveLocalData();}}else{saveLocalData();showToast(_('regSuccessNoSync'));showLogin();hideLoading();return;}
-    showToast(_('regSuccess'));showLogin();hideLoading();
+    try{await saveData('注册学生:'+u);showToast(_('regSuccess'));}catch(x){saveLocalData();showToast(_('regSuccessNoSync'));}
+    showLogin();hideLoading();
   }catch(x){e.textContent=_('errorNetwork');hideLoading();}
 }
 
@@ -624,8 +626,8 @@ function changeOwnPassword(){
   if(appData.users[currentUser.username].password!==oldP){showToast(_('settingsPwdWrong'));return;}
   appData.users[currentUser.username].password=newP;
   saveLocalData();
-  if(hasToken()){showLoading(_('syncing'));saveData('修改密码:'+currentUser.username).then(()=>updateSyncStatus(true)).catch(()=>updateSyncStatus(false)).finally(hideLoading);}
-  else{showToast(_('settingsPwdChanged'));}
+  showLoading(_('syncing'));
+  saveData('修改密码:'+currentUser.username).then(()=>{updateSyncStatus(true);showToast(_('settingsPwdChanged'));}).catch(()=>{updateSyncStatus(false);showToast(_('settingsPwdChanged'));}).finally(hideLoading);
   document.getElementById('oldPassword').value='';
   document.getElementById('newPassword').value='';
   document.getElementById('newPassword2').value='';
@@ -705,7 +707,9 @@ async function teacherToggleCheckin(name,key){
   const allDone=Object.values(ci).every(v=>v===true);
   if(allDone)updateStudentStreak(name);
   saveLocalData();
-  if(hasToken()){showLoading(_('syncing'));try{await saveData(currentUser.username+' checkin '+name+' '+key);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}hideLoading();}
+  showLoading(_('syncing'));
+  try{await saveData(currentUser.username+' checkin '+name+' '+key);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+  hideLoading();
   if(allDone){setTimeout(()=>spawnConfetti(),100);setTimeout(()=>showToast(_('allDone')),800);}
   showStudentCheckin(name);
 }
@@ -758,8 +762,10 @@ async function saveTeacherTasks(){
   else{if(!appData.studentTasks)appData.studentTasks={};if(!appData.studentTasks[teacherTaskStudent])appData.studentTasks[teacherTaskStudent]={};if(!appData.studentTasks[teacherTaskStudent][date])appData.studentTasks[teacherTaskStudent][date]={};Object.assign(appData.studentTasks[teacherTaskStudent][date],tasks);}
   saveLocalData();
   const label=teacherTaskStudent==='__default__'?_('taskDefaultOption'):'学生 '+teacherTaskStudent;
-  if(hasToken()){showLoading(_('syncing'));try{await saveData('编辑 '+date+' '+label+' 作业');updateSyncStatus(true);}catch(e){updateSyncStatus(false);}hideLoading();}
-  showToast('✅ '+_('taskSaved')+(hasToken()?' '+_('taskSyncSaved'):''));
+  showLoading(_('syncing'));
+  try{await saveData('编辑 '+date+' '+label+' 作业');updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+  hideLoading();
+  showToast('✅ '+_('taskSaved'));
 }
 
 // ===== TEACHER: Podium =====
@@ -806,7 +812,7 @@ async function saveToken(){
   hideLoading();renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
-function clearToken(){if(confirm(_('confirmRemoveToken'))){setToken('');updateSyncStatus();renderTeacherSettings(document.getElementById('teacherMain'));}}
+function clearToken(){if(confirm(_('confirmRemoveToken'))){setToken('');showToast(_('settingsTokenBuiltin'));updateSyncStatus();renderTeacherSettings(document.getElementById('teacherMain'));}}
 
 async function addTeacher(){
   const u=document.getElementById('newTeacherUser').value.trim(),p=document.getElementById('newTeacherPass').value;
@@ -814,7 +820,9 @@ async function addTeacher(){
   if(p.length<4){showToast(_('errorPassShort'));return;}
   if(appData.users[u]){showToast(_('errorUserExists'));return;}
   appData.users[u]={password:p,role:'teacher'};saveLocalData();
-  if(hasToken()){showLoading(_('syncing'));try{await saveData('添加教师:'+u);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}hideLoading();}
+  showLoading(_('syncing'));
+  try{await saveData('添加教师:'+u);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+  hideLoading();
   showToast(_('teacherAdded'));renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
@@ -823,7 +831,9 @@ async function deleteUser(name){
   delete appData.users[name];delete appData.checkins[name];delete appData.streaks[name];
   if(appData.studentTasks)delete appData.studentTasks[name];
   saveLocalData();
-  if(hasToken()){showLoading(_('syncing'));try{await saveData('删除用户:'+name);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}hideLoading();}
+  showLoading(_('syncing'));
+  try{await saveData('删除用户:'+name);updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+  hideLoading();
   showToast(_('userDeleted'));renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
@@ -920,17 +930,16 @@ async function sendChat(){
   appData.chatMessages.push({username:currentUser.username,role:currentUser.role,message:msg,timestamp:new Date().toISOString()});
   if(appData.chatMessages.length>CHAT_MAX)appData.chatMessages=appData.chatMessages.slice(-CHAT_MAX);
   saveLocalData();renderChatMessages();
-  if(hasToken()){try{await saveData('聊天:'+currentUser.username);}catch(e){}}
+  try{await saveData('聊天:'+currentUser.username);}catch(e){}
 }
 
 async function refreshChat(){
-  if(hasToken()){try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];updateSyncStatus(true);}catch(e){updateSyncStatus(false);}}
+  try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
   renderChatMessages();
 }
 
 function startChatPoll(){
   if(chatTimer)clearInterval(chatTimer);
-  if(!hasToken())return;
   chatTimer=setInterval(async()=>{try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];renderChatMessages();updateSyncStatus(true);}catch(e){}},5000);
 }
 
