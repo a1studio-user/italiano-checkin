@@ -845,7 +845,13 @@ function startChatPoll(){
 
 // ===== UTILS =====
 function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function formatDate(ds){const d=new Date(ds+'T00:00:00');const days=['日','一','二','三','四','五','六'];return`${d.getMonth()+1}月${d.getDate()}日 周${days[d.getDay()]}`;}
+function formatDate(ds){
+  const d=new Date(ds+'T00:00:00');
+  const dayNames={'zh-CN':['日','一','二','三','四','五','六'],'en':['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],'it':['Dom','Lun','Mar','Mer','Gio','Ven','Sab']};
+  const months={'zh-CN':(m)=>m+'月','en':(m)=>['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1],'it':(m)=>['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'][m-1]};
+  const fmt=lang==='en'?`${months.en(d.getMonth()+1)} ${d.getDate()}, ${dayNames.en[d.getDay()]}`:lang==='it'?`${d.getDate()} ${months.it(d.getMonth()+1)}, ${dayNames.it[d.getDay()]}`:`${d.getMonth()+1}月${d.getDate()}日 周${dayNames['zh-CN'][d.getDay()]}`;
+  return fmt;
+}
 
 function spawnConfetti(){const c=document.getElementById('confettiContainer');const em=['🎉','🌟','✨','🇮🇹','🍕','🎊','💚','🤍','❤️','🌹','⭐','🎈'];for(let i=0;i<30;i++){const p=document.createElement('span');p.className='confetti-piece';p.textContent=em[Math.floor(Math.random()*em.length)];p.style.left=Math.random()*100+'%';p.style.animationDuration=(Math.random()*2+2)+'s';p.style.animationDelay=Math.random()*.5+'s';c.appendChild(p);setTimeout(()=>p.remove(),3500);}}
 
