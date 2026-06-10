@@ -13,5 +13,12 @@
   "studentTasks": {},
   "checkins": {},
   "streaks": {},
-  "chatMessages": []
+  "chatMessages": [
+    {
+      "username": "toni",
+      "role": "teacher",
+      "message": "ciao",
+      "timestamp": "2026-06-10T03:39:55.194Z"
+    }
+  ]
 }
