@@ -658,10 +658,10 @@ function renderTeacherTasks(main){
     <div style="background:#fffbe6;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#996;line-height:1.5">${_('taskDefaultHint')}</div>
     <div class="row"><select id="taskStudent" onchange="changeTaskStudent()"><option value="__default__" ${teacherTaskStudent==='__default__'?'selected':''}>${_('taskDefaultOption')}</option>${students.map(s=>`<option value="${s}" ${teacherTaskStudent===s?'selected':''}>👤 ${s}</option>`).join('')}</select></div>
     <div class="row"><input type="date" id="taskDate" value="${today}" onchange="loadTaskForDate()"><button class="btn-sm primary" onclick="saveTeacherTasks()">${_('taskSave')}</button></div>
-    <div class="cat-label">${_('taskHomework')}</div><textarea id="editHomework">${tasks.homework||getDefaultTask('homework',today)}</textarea>
-    <div class="cat-label">${_('taskDictation')}</div><textarea id="editDictation">${tasks.dictation||getDefaultTask('dictation',today)}</textarea>
-    <div class="cat-label">${_('taskRecite')}</div><textarea id="editRecite">${tasks.recite||getDefaultTask('recite',today)}</textarea>
-    <div class="cat-label">${_('taskSpeaking')}</div><textarea id="editSpeaking">${tasks.speaking||getDefaultTask('speaking',today)}</textarea>
+    <div class="cat-label">${_('taskHomework')}</div><textarea id="editHomework" placeholder="${_('taskHomework')}">${tasks.homework||''}</textarea>
+    <div class="cat-label">${_('taskDictation')}</div><textarea id="editDictation" placeholder="${_('taskDictation')}">${tasks.dictation||''}</textarea>
+    <div class="cat-label">${_('taskRecite')}</div><textarea id="editRecite" placeholder="${_('taskRecite')}">${tasks.recite||''}</textarea>
+    <div class="cat-label">${_('taskSpeaking')}</div><textarea id="editSpeaking" placeholder="${_('taskSpeaking')}">${tasks.speaking||''}</textarea>
     <button class="btn-sm primary" style="width:100%;padding:12px;font-size:15px;margin-top:8px" onclick="saveTeacherTasks()">${_('taskSave')}</button>
   </div>`;
 }
@@ -672,10 +672,10 @@ function loadTaskForDate(){
   let tasks={};
   if(teacherTaskStudent==='__default__'){tasks=appData.dailyTasks[date]||{};}
   else{tasks=((appData.studentTasks||{})[teacherTaskStudent]||{})[date]||{};}
-  document.getElementById('editHomework').value=tasks.homework||getDefaultTask('homework',date);
-  document.getElementById('editDictation').value=tasks.dictation||getDefaultTask('dictation',date);
-  document.getElementById('editRecite').value=tasks.recite||getDefaultTask('recite',date);
-  document.getElementById('editSpeaking').value=tasks.speaking||getDefaultTask('speaking',date);
+  document.getElementById('editHomework').value=tasks.homework||'';
+  document.getElementById('editDictation').value=tasks.dictation||'';
+  document.getElementById('editRecite').value=tasks.recite||'';
+  document.getElementById('editSpeaking').value=tasks.speaking||'';
 }
 
 async function saveTeacherTasks(){
