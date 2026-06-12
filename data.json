@@ -15,7 +15,16 @@
   },
   "dailyTasks": {},
   "studentTasks": {},
-  "checkins": {},
+  "checkins": {
+    "ceshi": {
+      "2026-06-12": {
+        "homework": true,
+        "dictation": false,
+        "recite": false,
+        "speaking": false
+      }
+    }
+  },
   "streaks": {},
   "chatMessages": [
     {
