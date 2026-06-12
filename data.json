@@ -18,7 +18,7 @@
   "checkins": {
     "ceshi": {
       "2026-06-12": {
-        "homework": false,
+        "homework": true,
         "dictation": false,
         "recite": false,
         "speaking": false
@@ -45,5 +45,6 @@
       "message": "ciao",
       "timestamp": "2026-06-12T03:11:23.849Z"
     }
-  ]
+  ],
+  "hiddenChatMessages": {}
 }
