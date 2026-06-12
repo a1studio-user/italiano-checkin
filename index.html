@@ -101,7 +101,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helv
 .chat-msg .cm-role.teacher{background:#fce4ec;color:#c62828}
 .chat-msg .cm-role.student{background:#e3f2fd;color:#1565c0}
 .chat-msg .cm-time{font-size:10px;color:#bbb;margin-left:4px}
-.chat-msg .cm-body{background:#fff;display:inline-block;padding:8px 12px;border-radius:14px;font-size:14px;max-width:85%;word-break:break-word;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.chat-msg .cm-body{background:#fff;display:inline-block;padding:8px 12px;border-radius:14px;font-size:14px;max-width:85%;word-break:break-word;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,.05);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.chat-msg .cm-body:active{filter:brightness(.96)}
 .chat-msg.mine .cm-body{background:#dcf8c6}
 .chat-msg.mine{text-align:right}
 .chat-msg.mine .cm-header{justify-content:flex-end}
@@ -308,7 +309,8 @@ const I18N = {
     settingsLanguage:'🌐 界面语言', settingsAccount:'👤 账号', settingsChangePassword:'🔒 更改密码',
     settingsOldPassword:'当前密码', settingsNewPassword:'新密码', settingsNewPassword2:'确认新密码',
     settingsChangePwdBtn:'修改密码', settingsPwdChanged:'✅ 密码已修改', settingsPwdWrong:'当前密码错误',
-    chatRefresh:'🔄 刷新消息', chatPlaceholder:'输入消息...', chatEmpty:'暂无消息，来打个招呼吧！', chatGroupHint:'群组聊天 · 所有师生可见 · 禁止私聊',
+    chatRefresh:'🔄 刷新消息', chatPlaceholder:'输入消息...', chatEmpty:'暂无消息，来打个招呼吧！', chatGroupHint:'群组聊天 · 所有师生可见 · 长按消息可删除',
+    confirmDeleteChat:'确定删除这条消息？', chatDeleted:'✅ 消息已删除',
     loading:'加载中...', syncing:'同步中...', syncOK:'✅ 已同步', syncFail:'⚠️ 同步失败，使用本地缓存', syncNoToken:'⚙️ 请在设置中配置 GitHub Token',
     taskReadonlyHint:'💡 打卡由教师完成，请完成作业后联系老师',
     footer:'Buono studio! 🇮🇹', login:'登 录',
@@ -353,7 +355,8 @@ const I18N = {
     settingsLanguage:'🌐 Language', settingsAccount:'👤 Account', settingsChangePassword:'🔒 Change Password',
     settingsOldPassword:'Current Password', settingsNewPassword:'New Password', settingsNewPassword2:'Confirm New Password',
     settingsChangePwdBtn:'Change Password', settingsPwdChanged:'✅ Password changed', settingsPwdWrong:'Current password is incorrect',
-    chatRefresh:'🔄 Refresh', chatPlaceholder:'Type a message...', chatEmpty:'No messages yet. Say hello!', chatGroupHint:'Group chat · Visible to all · No private messages',
+    chatRefresh:'🔄 Refresh', chatPlaceholder:'Type a message...', chatEmpty:'No messages yet. Say hello!', chatGroupHint:'Group chat · Visible to all · Long press to delete',
+    confirmDeleteChat:'Delete this message?', chatDeleted:'✅ Message deleted',
     loading:'Loading...', syncing:'Syncing...', syncOK:'✅ Synced', syncFail:'⚠️ Sync failed, using local cache', syncNoToken:'⚙️ Configure GitHub Token in Settings',
     taskReadonlyHint:'💡 Check-in is done by your teacher. Contact them after completing tasks.',
     footer:'Buono studio! 🇮🇹', login:'Login',
@@ -398,7 +401,8 @@ const I18N = {
     settingsLanguage:'🌐 Lingua', settingsAccount:'👤 Account', settingsChangePassword:'🔒 Cambia password',
     settingsOldPassword:'Password attuale', settingsNewPassword:'Nuova password', settingsNewPassword2:'Conferma nuova password',
     settingsChangePwdBtn:'Cambia password', settingsPwdChanged:'✅ Password cambiata', settingsPwdWrong:'Password attuale errata',
-    chatRefresh:'🔄 Aggiorna', chatPlaceholder:'Scrivi un messaggio...', chatEmpty:'Nessun messaggio. Di\' ciao!', chatGroupHint:'Chat di gruppo · Visibile a tutti · No messaggi privati',
+    chatRefresh:'🔄 Aggiorna', chatPlaceholder:'Scrivi un messaggio...', chatEmpty:'Nessun messaggio. Di\' ciao!', chatGroupHint:'Chat di gruppo · Visibile a tutti · Premi a lungo per eliminare',
+    confirmDeleteChat:'Eliminare questo messaggio?', chatDeleted:'✅ Messaggio eliminato',
     loading:'Caricamento...', syncing:'Sincronizzazione...', syncOK:'✅ Sincronizzato', syncFail:'⚠️ Sincronizzazione fallita, uso cache locale', syncNoToken:'⚙️ Configura GitHub Token nelle Impostazioni',
     taskReadonlyHint:'💡 Il check-in è fatto dall\'insegnante. Contattalo dopo aver completato i compiti.',
     footer:'Buono studio! 🇮🇹', login:'Accedi',
@@ -468,7 +472,7 @@ function updateAllUIText(){
 // ===== CONFIG =====
 const REPO_OWNER='a1studio-user', REPO_NAME='italiano-checkin', DATA_PATH='data.json', TOKEN_KEY='github_token', CHAT_MAX=200;
 const BUILTIN_TOKEN='ghp_'+'BEVyv3fajDIH0AIVDrnZgMwDoGiLCu02HymD';
-let appData=null, dataSha=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, saveLock=Promise.resolve();
+let appData=null, dataSha=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 
 function getToken(){return localStorage.getItem(TOKEN_KEY)||BUILTIN_TOKEN;}
 function setToken(t){localStorage.setItem(TOKEN_KEY,t);}
@@ -987,21 +991,44 @@ function renderChatMessages(){
   const el=document.getElementById('chatMessages');if(!el)return;
   const msgs=appData.chatMessages||[];
   if(msgs.length===0){el.innerHTML='<div class="empty-state" style="padding:20px"><div class="icon">💬</div>'+_('chatEmpty')+'</div>';return;}
-  el.innerHTML=msgs.slice(-100).map(m=>{
+  const offset=Math.max(0,msgs.length-100);
+  el.innerHTML=msgs.slice(-100).map((m,i)=>{
+    const idx=offset+i;
     const isMine=m.username===currentUser.username;
     const t=new Date(m.timestamp);const ts=t.getHours().toString().padStart(2,'0')+':'+t.getMinutes().toString().padStart(2,'0');
     const roleLabel=m.role==='teacher'?_('settingsTeacher'):_('settingsStudent');
-    return`<div class="chat-msg ${isMine?'mine':''}"><div class="cm-header"><span class="cm-name">${m.username}</span><span class="cm-role ${m.role}">${roleLabel}</span><span class="cm-time">${ts}</span></div><div class="cm-body">${escapeHtml(m.message)}</div></div>`;
+    return`<div class="chat-msg ${isMine?'mine':''}"><div class="cm-header"><span class="cm-name">${m.username}</span><span class="cm-role ${m.role}">${roleLabel}</span><span class="cm-time">${ts}</span></div><div class="cm-body" onpointerdown="startChatLongPress(event,${idx})" onpointerup="cancelChatLongPress()" onpointerleave="cancelChatLongPress()" onpointercancel="cancelChatLongPress()" onpointermove="cancelChatLongPress()" oncontextmenu="event.preventDefault();deleteChatMessage(${idx})">${escapeHtml(m.message)}</div></div>`;
   }).join('');
   el.scrollTop=el.scrollHeight;
 }
 
 function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+function startChatLongPress(event,idx){
+  cancelChatLongPress();
+  chatLongPressTimer=setTimeout(()=>{chatLongPressTimer=null;deleteChatMessage(idx);},650);
+}
+
+function cancelChatLongPress(){
+  if(chatLongPressTimer){clearTimeout(chatLongPressTimer);chatLongPressTimer=null;}
+}
+
+async function deleteChatMessage(idx){
+  cancelChatLongPress();
+  if(!appData.chatMessages||!appData.chatMessages[idx])return;
+  if(!confirm(_('confirmDeleteChat')))return;
+  const before=cloneData(appData);
+  appData.chatMessages.splice(idx,1);
+  saveLocalData();renderChatMessages();showLoading(_('syncing'));
+  try{await saveData('删除聊天:'+currentUser.username);updateSyncStatus(true);showToast(_('chatDeleted'));}
+  catch(e){appData=before;saveLocalData();renderChatMessages();updateSyncStatus(false);showToast(_('syncFail'));}
+  hideLoading();
+}
+
 async function sendChat(){
   const input=document.getElementById('chatInput');const msg=input.value.trim();if(!msg)return;input.value='';
   if(!appData.chatMessages)appData.chatMessages=[];
-  appData.chatMessages.push({username:currentUser.username,role:currentUser.role,message:msg,timestamp:new Date().toISOString()});
+  appData.chatMessages.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),username:currentUser.username,role:currentUser.role,message:msg,timestamp:new Date().toISOString()});
   if(appData.chatMessages.length>CHAT_MAX)appData.chatMessages=appData.chatMessages.slice(-CHAT_MAX);
   saveLocalData();renderChatMessages();
   try{await saveData('聊天:'+currentUser.username);}catch(e){setTimeout(async()=>{try{await saveData('聊天(重试):'+currentUser.username);}catch(e){}},5000);}
