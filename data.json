@@ -19,7 +19,7 @@
     "ceshi": {
       "2026-06-12": {
         "homework": false,
-        "dictation": false,
+        "dictation": true,
         "recite": false,
         "speaking": false
       }
