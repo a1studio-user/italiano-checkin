@@ -46,5 +46,9 @@
       "timestamp": "2026-06-12T03:11:23.849Z"
     }
   ],
-  "hiddenChatMessages": {}
+  "hiddenChatMessages": {
+    "toni": [
+      "2026-06-12T03:11:23.849Z|ceshi|student|ciao"
+    ]
+  }
 }
