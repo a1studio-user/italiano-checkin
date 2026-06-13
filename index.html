@@ -472,7 +472,7 @@ function updateAllUIText(){
 // ===== CONFIG =====
 const SUPABASE_URL='https://imzxxbxdjwqfduwsqipz.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltenh4YnhkandxZmR1d3NxaXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTU0MzIsImV4cCI6MjA5Njg5MTQzMn0.cq8SAZU2vOl3VMdgML4LlpSKCCH-AFrYSjW64MHipnk';
-const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users';
+const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', RECENT_USERS_KEY='italiano_recent_users';
 let appData=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -556,10 +556,27 @@ function loadLocalData(){const r=localStorage.getItem(LK);return r?normalizeData
 function saveLocalData(){localStorage.setItem(LK,JSON.stringify(appData));}
 function loadPendingUsers(){try{return JSON.parse(localStorage.getItem(PENDING_USERS_KEY)||'{}')||{};}catch(e){return{};}}
 function savePendingUsers(users){localStorage.setItem(PENDING_USERS_KEY,JSON.stringify(users||{}));}
+function loadRecentUsers(){try{return JSON.parse(localStorage.getItem(RECENT_USERS_KEY)||'{}')||{};}catch(e){return{};}}
+function saveRecentUsers(users){localStorage.setItem(RECENT_USERS_KEY,JSON.stringify(users||{}));}
+function rememberRecentUser(username,password){
+  const users=loadRecentUsers();
+  users[username]={password,role:'student',createdAt:new Date().toISOString()};
+  saveRecentUsers(users);
+}
+function getLocalRegisteredUser(username,password){
+  const pending=loadPendingUsers()[username];
+  const recent=loadRecentUsers()[username];
+  const u=pending||recent;
+  if(!u||u.password!==password)return null;
+  const t=Date.parse(u.createdAt||'');
+  if(t&&Date.now()-t>7*24*60*60*1000)return null;
+  return {password:u.password,role:u.role||'student'};
+}
 function addPendingUser(username,password){
   const users=loadPendingUsers();
   users[username]={password,role:'student',createdAt:new Date().toISOString()};
   savePendingUsers(users);
+  rememberRecentUser(username,password);
 }
 function removePendingUser(username){
   const users=loadPendingUsers();
@@ -673,18 +690,21 @@ async function doLogin(){
   showLoading(_('loading'));
   try{
     // 登录以Supabase远程用户表为准，避免旧设备localStorage里的账号被误认为仍存在。
-    try{await fetchDataFromApi();await syncPendingUsers();}catch(x){await fetchData();}
+    let remoteError=false;
+    try{await fetchDataFromApi();await syncPendingUsers();}catch(x){remoteError=true;try{await fetchData();}catch(y){}}
     if(!appData.users[u]){
-      const pending=loadPendingUsers()[u];
-      if(pending&&pending.password===p){
+      const localUser=getLocalRegisteredUser(u,p);
+      if(localUser){
         if(!appData)appData=loadLocalData();
-        appData.users[u]={password:p,role:'student'};
+        appData.users[u]={password:p,role:localUser.role};
         saveLocalData();
-        currentUser={username:u,role:'student'};
-        showStudentPage();hideLoading();showToast(_('syncFail'));
+        currentUser={username:u,role:localUser.role};
+        if(currentUser.role==='teacher')showTeacherPage();else showStudentPage();
+        hideLoading();if(remoteError)showToast(_('syncFail'));
         setTimeout(async()=>{try{await syncPendingUsers();}catch(e){}},1000);
         return;
       }
+      if(remoteError){e.textContent=_('errorNetwork');hideLoading();return;}
       e.textContent=_('errorNotFound');hideLoading();return;
     }
     if(appData.users[u].password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
@@ -711,6 +731,7 @@ async function doRegister(){
     if(appData.users[u]){e.textContent=_('errorUserExists');hideLoading();return;}
     const before=cloneData(appData);
     appData.users[u]={password:p,role:'student'};
+    rememberRecentUser(u,p);
     try{await saveData('注册学生:'+u);removePendingUser(u);showToast(_('regSuccess'));}
     catch(x){
       addPendingUser(u,p);
@@ -720,7 +741,7 @@ async function doRegister(){
       showToast(_('regSuccessNoSync'));
       setTimeout(async()=>{try{await syncPendingUsers();}catch(e){}},1000);
     }
-    showLogin();hideLoading();
+    showLogin();document.getElementById('loginUser').value=u;hideLoading();
   }catch(x){e.textContent=_('errorNetwork');hideLoading();}
 }
 
