@@ -472,8 +472,8 @@ function updateAllUIText(){
 // ===== CONFIG =====
 const SUPABASE_URL='https://imzxxbxdjwqfduwsqipz.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltenh4YnhkandxZmR1d3NxaXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTU0MzIsImV4cCI6MjA5Njg5MTQzMn0.cq8SAZU2vOl3VMdgML4LlpSKCCH-AFrYSjW64MHipnk';
-const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', RECENT_USERS_KEY='italiano_recent_users';
-let appData=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users';
+let appData=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 
 function getToken(){return SUPABASE_ANON_KEY;}
 function setToken(t){}
@@ -482,6 +482,7 @@ function hasToken(){return true;}
 async function fetchData(){return fetchDataFromApi();}
 
 async function fetchDataFromApi(){
+  await supabaseClearOldChat();
   appData=await fetchSupabaseData();
   saveLocalData();
 }
@@ -493,7 +494,7 @@ async function fetchSupabaseData(){
     supabaseRequest('student_tasks?select=*'),
     supabaseRequest('checkins?select=*'),
     supabaseRequest('streaks?select=*'),
-    supabaseRequest('chat_messages?select=*&order=created_at.asc'),
+    supabaseRequest('chat_messages?select=*&created_at=gte.'+encodeURIComponent(getTodayStartISO())+'&order=created_at.asc'),
     supabaseRequest('hidden_chat_messages?select=*')
   ]);
   const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};
@@ -556,27 +557,17 @@ function loadLocalData(){const r=localStorage.getItem(LK);return r?normalizeData
 function saveLocalData(){localStorage.setItem(LK,JSON.stringify(appData));}
 function loadPendingUsers(){try{return JSON.parse(localStorage.getItem(PENDING_USERS_KEY)||'{}')||{};}catch(e){return{};}}
 function savePendingUsers(users){localStorage.setItem(PENDING_USERS_KEY,JSON.stringify(users||{}));}
-function loadRecentUsers(){try{return JSON.parse(localStorage.getItem(RECENT_USERS_KEY)||'{}')||{};}catch(e){return{};}}
-function saveRecentUsers(users){localStorage.setItem(RECENT_USERS_KEY,JSON.stringify(users||{}));}
-function rememberRecentUser(username,password){
-  const users=loadRecentUsers();
-  users[username]={password,role:'student',createdAt:new Date().toISOString()};
-  saveRecentUsers(users);
-}
 function getLocalRegisteredUser(username,password){
-  const pending=loadPendingUsers()[username];
-  const recent=loadRecentUsers()[username];
-  const u=pending||recent;
+  const u=loadPendingUsers()[username];
   if(!u||u.password!==password)return null;
   const t=Date.parse(u.createdAt||'');
-  if(t&&Date.now()-t>7*24*60*60*1000)return null;
+  if(!t||Date.now()-t>24*60*60*1000)return null;
   return {password:u.password,role:u.role||'student'};
 }
 function addPendingUser(username,password){
   const users=loadPendingUsers();
   users[username]={password,role:'student',createdAt:new Date().toISOString()};
   savePendingUsers(users);
-  rememberRecentUser(username,password);
 }
 function removePendingUser(username){
   const users=loadPendingUsers();
@@ -592,6 +583,8 @@ async function syncPendingUsers(){
   for(const name of names){
     const u=pending[name];
     if(!u||!u.password){delete pending[name];continue;}
+    const t=Date.parse(u.createdAt||'');
+    if(!t||Date.now()-t>24*60*60*1000){delete pending[name];continue;}
     if(!merged.users[name]){
       merged.users[name]={password:u.password,role:'student'};
       synced.push(name);changed=true;
@@ -634,6 +627,11 @@ async function supabaseSaveUsers(data){
 }
 async function supabaseDeleteUser(username){
   await supabaseRequest('app_users?username=eq.'+encodeURIComponent(username),{method:'DELETE'});
+}
+async function supabaseClearOldChat(){
+  const cutoff=encodeURIComponent(getTodayStartISO());
+  await supabaseRequest('chat_messages?created_at=lt.'+cutoff,{method:'DELETE'});
+  await supabaseRequest('hidden_chat_messages?hidden_at=lt.'+cutoff,{method:'DELETE'});
 }
 async function supabaseSaveTasks(data){
   const dailyRows=Object.entries(data.dailyTasks||{}).map(([date,t])=>taskRow(date,t));
@@ -690,23 +688,25 @@ async function doLogin(){
   showLoading(_('loading'));
   try{
     // 登录以Supabase远程用户表为准，避免旧设备localStorage里的账号被误认为仍存在。
-    let remoteError=false;
-    try{await fetchDataFromApi();await syncPendingUsers();}catch(x){remoteError=true;try{await fetchData();}catch(y){}}
-    if(!appData.users[u]){
-      const localUser=getLocalRegisteredUser(u,p);
-      if(localUser){
-        if(!appData)appData=loadLocalData();
-        appData.users[u]={password:p,role:localUser.role};
-        saveLocalData();
-        currentUser={username:u,role:localUser.role};
-        if(currentUser.role==='teacher')showTeacherPage();else showStudentPage();
-        hideLoading();if(remoteError)showToast(_('syncFail'));
-        setTimeout(async()=>{try{await syncPendingUsers();}catch(e){}},1000);
-        return;
+      let remoteError=false;
+      try{await fetchDataFromApi();await syncPendingUsers();}catch(x){remoteError=true;try{await fetchData();}catch(y){}}
+      if(!appData.users[u]){
+        if(remoteError){
+          const localUser=getLocalRegisteredUser(u,p);
+          if(localUser){
+            if(!appData)appData=loadLocalData();
+            appData.users[u]={password:p,role:localUser.role};
+            saveLocalData();
+            currentUser={username:u,role:localUser.role};
+            if(currentUser.role==='teacher')showTeacherPage();else showStudentPage();
+            hideLoading();showToast(_('syncFail'));
+            setTimeout(async()=>{try{await syncPendingUsers();}catch(e){}},1000);
+            return;
+          }
+          e.textContent=_('errorNetwork');hideLoading();return;
+        }
+        e.textContent=_('errorNotFound');hideLoading();return;
       }
-      if(remoteError){e.textContent=_('errorNetwork');hideLoading();return;}
-      e.textContent=_('errorNotFound');hideLoading();return;
-    }
     if(appData.users[u].password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
     removePendingUser(u);
     currentUser={username:u,role:appData.users[u].role};
@@ -728,11 +728,10 @@ async function doRegister(){
     // 注册必须直连API，CDN有缓存延迟可能漏掉刚注册的用户
     try{await fetchDataFromApi();}catch(x){await fetchData();}
     if(!appData.chatMessages)appData.chatMessages=[];
-    if(appData.users[u]){e.textContent=_('errorUserExists');hideLoading();return;}
-    const before=cloneData(appData);
-    appData.users[u]={password:p,role:'student'};
-    rememberRecentUser(u,p);
-    try{await saveData('注册学生:'+u);removePendingUser(u);showToast(_('regSuccess'));}
+      if(appData.users[u]){e.textContent=_('errorUserExists');hideLoading();return;}
+      const before=cloneData(appData);
+      appData.users[u]={password:p,role:'student'};
+      try{await saveData('注册学生:'+u);removePendingUser(u);showToast(_('regSuccess'));}
     catch(x){
       addPendingUser(u,p);
       appData=before;
@@ -747,7 +746,8 @@ async function doRegister(){
 
 function doLogout(){
   if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
-  currentUser=null;appData=null;dataSha=null;
+  if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}
+  currentUser=null;appData=null;
   showPage('loginPage');document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';document.getElementById('loginError').textContent='';
 }
 
@@ -797,19 +797,22 @@ async function switchTeacherTab(tab){
   const main=document.getElementById('teacherMain');
   if(tab==='students'){
     if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
+    if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}
     main.innerHTML='<div class="empty-state"><div class="icon">⏳</div>'+_('loading')+'</div>';
     try{await fetchDataFromApi();updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
     renderTeacherStudents(main);
+    teacherRefreshTimer=setInterval(async()=>{try{await fetchDataFromApi();renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}catch(e){updateSyncStatus(false);}},8000);
   }
   else if(tab==='tasks'){
     if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
+    if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}
     main.innerHTML='<div class="empty-state"><div class="icon">⏳</div>'+_('loading')+'</div>';
     try{await fetchDataFromApi();updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
     renderTeacherTasks(main);
   }
-  else if(tab==='podium'){if(chatTimer){clearInterval(chatTimer);chatTimer=null;}renderTeacherPodium(main);}
-  else if(tab==='chat'){renderChat(main);startChatPoll();}
-  else if(tab==='settings'){if(chatTimer){clearInterval(chatTimer);chatTimer=null;}renderTeacherSettings(main);}
+  else if(tab==='podium'){if(chatTimer){clearInterval(chatTimer);chatTimer=null;}if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}renderTeacherPodium(main);}
+  else if(tab==='chat'){if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}renderChat(main);startChatPoll();}
+  else if(tab==='settings'){if(chatTimer){clearInterval(chatTimer);chatTimer=null;}if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}renderTeacherSettings(main);}
 }
 
 function renderTeacherStudents(main){
@@ -827,7 +830,14 @@ function renderTeacherStudents(main){
       return`<div class="student-card" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/4</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>🌹 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${['homework','dictation','recite','speaking'].map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>`;
     }).join('');
   }
-  main.innerHTML=`<div class="section-title">${_('studentListTitle')}</div>`+listHTML+'<div id="checkinDetailArea"></div>';
+  main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+listHTML+'<div id="checkinDetailArea"></div>';
+}
+
+async function refreshTeacherStudents(){
+  showLoading(_('syncing'));
+  try{await fetchDataFromApi();renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}
+  catch(e){updateSyncStatus(false);showToast(_('syncFail'));}
+  hideLoading();
 }
 
 function showStudentCheckin(name){
@@ -1161,6 +1171,7 @@ function startChatPoll(){
 
 // ===== UTILS =====
 function getToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function getTodayStartISO(){const d=new Date();d.setHours(0,0,0,0);return d.toISOString();}
 function formatDate(ds){
   const d=new Date(ds+'T00:00:00');
   const dayNames={'zh-CN':['日','一','二','三','四','五','六'],'en':['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],'it':['Dom','Lun','Mar','Mer','Gio','Ven','Sab']};
