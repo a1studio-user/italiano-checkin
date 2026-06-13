@@ -595,15 +595,43 @@ async function supabaseGetUser(username){
   const rows=await supabaseRequest('app_users?select=*&username=eq.'+encodeURIComponent(username));
   return rows&&rows[0]?rows[0]:null;
 }
+async function supabaseIsDeletedUser(username){
+  const rows=await supabaseRequest('daily_tasks?select=task_date&task_date=eq.'+encodeURIComponent(deletedUserKey(username)));
+  return !!(rows&&rows.length);
+}
+function keepAuthenticatedUser(row){
+  if(!appData)appData=loadLocalData();
+  appData=normalizeData(appData);
+  appData.users[row.username]={password:row.password,role:row.role};
+  saveLocalData();
+}
+async function loadDataForAuthenticatedUser(row){
+  try{
+    await fetchDataFromApi();
+    if(!appData.users[row.username]){
+      appData.users[row.username]={password:row.password,role:row.role};
+      saveLocalData();
+    }
+    updateSyncStatus(true);
+  }catch(e){
+    keepAuthenticatedUser(row);
+    updateSyncStatus(false);
+  }
+}
+async function supabaseCreateUser(username,password,role){
+  if(await supabaseIsDeletedUser(username))throw new Error('用户已删除');
+  const row={username,password,role,updated_at:new Date().toISOString()};
+  const saved=await supabaseRequest('app_users?on_conflict=username',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify([row])});
+  if(!Array.isArray(saved)||saved.length===0)throw new Error('用户保存未生效');
+  const check=await supabaseGetUser(username);
+  if(!check||check.password!==password||check.role!==role)throw new Error('用户保存后复查失败');
+  return check;
+}
 async function supabaseSaveOneUser(data,username){
   const u=data.users&&data.users[username];
   if(!username||!u)throw new Error('用户数据不存在');
   if(getDeletedUsers(data).has(username))throw new Error('用户已删除');
-  const row={username,password:u.password,role:u.role,updated_at:new Date().toISOString()};
-  const saved=await supabaseRequest('app_users?on_conflict=username',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify([row])});
-  if(!Array.isArray(saved)||saved.length===0)throw new Error('用户保存未生效');
-  const check=await supabaseGetUser(username);
-  if(!check||check.password!==u.password||check.role!==u.role)throw new Error('用户保存后复查失败');
+  await supabaseCreateUser(username,u.password,u.role);
 }
 async function supabaseSaveUsers(data){
   const deleted=getDeletedUsers(data);
@@ -683,14 +711,14 @@ async function doLogin(){
   if(!u||!p){e.textContent=_('errorFill');return;}
   showLoading(_('loading'));
   try{
-    // 登录以Supabase远程用户表为准，避免旧设备localStorage里的账号被误认为仍存在。
-      await fetchDataFromApi();
-      if(!appData.users[u]){
-        e.textContent=_('errorNotFound');hideLoading();return;
-      }
-    if(appData.users[u].password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
+    // 认证只查单个账号，避免全量同步失败误判为“用户不存在”。
+    if(await supabaseIsDeletedUser(u)){e.textContent=_('errorNotFound');hideLoading();return;}
+    const user=await supabaseGetUser(u);
+    if(!user){e.textContent=_('errorNotFound');hideLoading();return;}
+    if(user.password!==p){e.textContent=_('errorWrongPass');hideLoading();return;}
     removePendingUser(u);
-    currentUser={username:u,role:appData.users[u].role};
+    currentUser={username:u,role:user.role};
+    await loadDataForAuthenticatedUser(user);
     if(currentUser.role==='teacher')showTeacherPage();else showStudentPage();
     hideLoading();
   }catch(x){e.textContent=_('errorNetwork');hideLoading();}
@@ -706,31 +734,19 @@ async function doRegister(){
   if(reserved.includes(u.toLowerCase())){e.textContent=_('errorReserved');return;}
   showLoading(_('loading'));
   try{
-    // 注册必须直连Supabase并通过写入后复查，避免出现“注册成功但登录不存在”。
-    await fetchDataFromApi();
-    if(!appData.chatMessages)appData.chatMessages=[];
-      if(getDeletedUsers(appData).has(u)){e.textContent=_('errorDeletedUser');hideLoading();return;}
-      if(appData.users[u]){e.textContent=_('errorUserExists');hideLoading();return;}
-      const before=cloneData(appData);
-      appData.users[u]={password:p,role:'student'};
-      try{
-        await saveData('注册学生:'+u);
-        const saved=await supabaseGetUser(u);
-        if(!saved||saved.password!==p||saved.role!=='student')throw new Error('注册后复查失败');
-        appData=before;
-        appData.users[u]={password:p,role:'student'};
-        saveLocalData();
-        removePendingUser(u);showToast(_('regSuccess'));
-      }
-    catch(x){
-      appData=before;
-      saveLocalData();
-      e.textContent=x&&x.message==='用户已删除'?_('errorDeletedUser'):_('errorNetwork');
-      hideLoading();
-      return;
-    }
-    showLogin();document.getElementById('loginUser').value=u;hideLoading();
-  }catch(x){e.textContent=_('errorNetwork');hideLoading();}
+    if(await supabaseIsDeletedUser(u)){e.textContent=_('errorDeletedUser');hideLoading();return;}
+    if(await supabaseGetUser(u)){e.textContent=_('errorUserExists');hideLoading();return;}
+    const user=await supabaseCreateUser(u,p,'student');
+    removePendingUser(u);
+    currentUser={username:u,role:'student'};
+    await loadDataForAuthenticatedUser(user);
+    showToast(_('regSuccess'));
+    showStudentPage();
+    hideLoading();
+  }catch(x){
+    e.textContent=x&&x.message==='用户已删除'?_('errorDeletedUser'):_('errorNetwork');
+    hideLoading();
+  }
 }
 
 function doLogout(){
