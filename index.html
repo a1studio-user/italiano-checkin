@@ -472,7 +472,7 @@ function updateAllUIText(){
 // ===== CONFIG =====
 const SUPABASE_URL='https://imzxxbxdjwqfduwsqipz.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltenh4YnhkandxZmR1d3NxaXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTU0MzIsImV4cCI6MjA5Njg5MTQzMn0.cq8SAZU2vOl3VMdgML4LlpSKCCH-AFrYSjW64MHipnk';
-const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:';
+const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
 let appData=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -488,7 +488,7 @@ async function fetchDataFromApi(){
 }
 
 async function fetchSupabaseData(){
-  const [users,daily,student,checkins,streaks,chat,hidden]=await Promise.all([
+  const results=await Promise.allSettled([
     supabaseRequest('app_users?select=*'),
     supabaseRequest('daily_tasks?select=*'),
     supabaseRequest('student_tasks?select=*'),
@@ -497,6 +497,15 @@ async function fetchSupabaseData(){
     supabaseRequest('chat_messages?select=*&created_at=gte.'+encodeURIComponent(getTodayStartISO())+'&order=created_at.asc'),
     supabaseRequest('hidden_chat_messages?select=*')
   ]);
+  if(results[0].status!=='fulfilled')throw results[0].reason;
+  const fallback=appData||loadLocalData();
+  const users=results[0].value||[];
+  const daily=results[1].status==='fulfilled'?results[1].value||[]:Object.entries(fallback.dailyTasks||{}).map(([task_date,t])=>Object.assign({task_date},t));
+  const student=results[2].status==='fulfilled'?results[2].value||[]:Object.entries(fallback.studentTasks||{}).flatMap(([username,dates])=>Object.entries(dates||{}).map(([task_date,t])=>Object.assign({username,task_date},t)));
+  const checkins=results[3].status==='fulfilled'?results[3].value||[]:Object.entries(fallback.checkins||{}).flatMap(([username,dates])=>Object.entries(dates||{}).map(([checkin_date,c])=>Object.assign({username,checkin_date},c)));
+  const streaks=results[4].status==='fulfilled'?results[4].value||[]:Object.entries(fallback.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null}));
+  const chat=results[5].status==='fulfilled'?results[5].value||[]:fallback.chatMessages||[];
+  const hidden=results[6].status==='fulfilled'?results[6].value||[]:[];
   const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];
   const deletedUsers=new Set();
   daily.forEach(t=>{if((t.task_date||'').startsWith(DELETED_USER_PREFIX))deletedUsers.add(decodeDeletedUsername(t.task_date));});
@@ -510,7 +519,7 @@ async function fetchSupabaseData(){
   student.forEach(t=>{if(!data.studentTasks[t.username])data.studentTasks[t.username]={};data.studentTasks[t.username][t.task_date]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};});
   checkins.forEach(c=>{if(!data.checkins[c.username])data.checkins[c.username]={};data.checkins[c.username][c.checkin_date]={homework:!!c.homework,dictation:!!c.dictation,recite:!!c.recite,speaking:!!c.speaking};});
   streaks.forEach(s=>{data.streaks[s.username]={streak:s.streak||0,flowers:s.flowers||0,lastCheckinDate:s.last_checkin_date||null};});
-  chat.forEach(m=>{data.chatMessages.push({id:m.id,username:m.username,role:m.role,message:m.message,timestamp:m.created_at});});
+  chat.forEach(m=>{data.chatMessages.push({id:m.id,username:m.username,role:m.role,message:m.message,timestamp:m.created_at||m.timestamp});});
   hidden.forEach(h=>{if(!data.hiddenChatMessages[h.username])data.hiddenChatMessages[h.username]=[];data.hiddenChatMessages[h.username].push(h.message_key);});
   return normalizeData(data);
 }
@@ -579,11 +588,27 @@ function supabaseHeaders(extra={}){
 }
 async function supabaseRequest(path,options={}){
   const url=SUPABASE_URL+'/rest/v1/'+path;
-  const r=await fetch(url,Object.assign({},options,{headers:supabaseHeaders(options.headers||{})}));
-  if(!r.ok)throw new Error('Supabase失败('+r.status+') '+await r.text());
-  if(r.status===204)return null;
-  const text=await r.text();
-  return text?JSON.parse(text):null;
+  const method=(options.method||'GET').toUpperCase();
+  const retries=options.retries==null?(method==='GET'?SUPABASE_RETRIES:1):options.retries;
+  let lastErr=null;
+  for(let attempt=0;attempt<=retries;attempt++){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),options.timeout||SUPABASE_TIMEOUT_MS);
+    try{
+      const r=await fetch(url,Object.assign({},options,{signal:controller.signal,headers:supabaseHeaders(options.headers||{})}));
+      clearTimeout(timer);
+      if(!r.ok)throw new Error('Supabase失败('+r.status+') '+await r.text());
+      if(r.status===204)return null;
+      const text=await r.text();
+      return text?JSON.parse(text):null;
+    }catch(e){
+      clearTimeout(timer);
+      lastErr=e;
+      if(attempt>=retries)break;
+      await sleep(500*(attempt+1));
+    }
+  }
+  throw lastErr||new Error('Supabase请求失败');
 }
 function taskRow(date,t){return{task_date:date,homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||'',updated_at:new Date().toISOString()};}
 function studentTaskRow(username,date,t){return{username,task_date:date,homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||'',updated_at:new Date().toISOString()};}
@@ -797,7 +822,7 @@ async function switchTeacherTab(tab){
     main.innerHTML='<div class="empty-state"><div class="icon">⏳</div>'+_('loading')+'</div>';
     try{await fetchDataFromApi();updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
     renderTeacherStudents(main);
-    teacherRefreshTimer=setInterval(async()=>{try{await fetchDataFromApi();renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}catch(e){updateSyncStatus(false);}},8000);
+    teacherRefreshTimer=setInterval(async()=>{try{await fetchDataFromApi();renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}catch(e){updateSyncStatus(false);}},20000);
   }
   else if(tab==='tasks'){
     if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
@@ -1175,7 +1200,7 @@ async function refreshChat(){
 
 function startChatPoll(){
   if(chatTimer)clearInterval(chatTimer);
-  chatTimer=setInterval(async()=>{try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];renderChatMessages();updateSyncStatus(true);}catch(e){}},5000);
+  chatTimer=setInterval(async()=>{try{await fetchData();if(!appData.chatMessages)appData.chatMessages=[];renderChatMessages();updateSyncStatus(true);}catch(e){}},10000);
 }
 
 // ===== UTILS =====
