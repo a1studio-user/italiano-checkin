@@ -475,7 +475,7 @@ function updateAllUIText(){
 // ===== CONFIG =====
 const SUPABASE_URL='https://imzxxbxdjwqfduwsqipz.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltenh4YnhkandxZmR1d3NxaXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTU0MzIsImV4cCI6MjA5Njg5MTQzMn0.cq8SAZU2vOl3VMdgML4LlpSKCCH-AFrYSjW64MHipnk';
-const APP_VERSION='v20';
+const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
 let appData=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 
@@ -651,6 +651,16 @@ async function supabaseCreateUser(username,password,role){
   if(await supabaseIsDeletedUser(username))throw new Error('用户已删除');
   const row={username,password,role,updated_at:new Date().toISOString()};
   const saved=await supabaseRequest('app_users?on_conflict=username',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify([row])});
+  if(!Array.isArray(saved)||saved.length===0)throw new Error('用户保存未生效');
+  const check=await supabaseGetUser(username);
+  if(!check||check.password!==password||check.role!==role)throw new Error('用户保存后复查失败');
+  return check;
+}
+async function supabaseCreateNewUser(username,password,role){
+  if(await supabaseIsDeletedUser(username))throw new Error('用户已删除');
+  if(await supabaseGetUser(username))throw new Error('用户已存在');
+  const row={username,password,role,updated_at:new Date().toISOString()};
+  const saved=await supabaseRequest('app_users',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify([row])});
   if(!Array.isArray(saved)||saved.length===0)throw new Error('用户保存未生效');
   const check=await supabaseGetUser(username);
   if(!check||check.password!==password||check.role!==role)throw new Error('用户保存后复查失败');
@@ -1026,10 +1036,11 @@ async function addAccount(){
   const before=cloneData(appData);
   appData.users[u]={password:p,role};
   showLoading(_('syncing'));
-  try{await supabaseCreateUser(u,p,role);await fetchDataFromApi();updateSyncStatus(true);}
-  catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(_('syncFail'));renderTeacherSettings(document.getElementById('teacherMain'));return;}
+  try{await supabaseCreateNewUser(u,p,role);saveLocalData();updateSyncStatus(true);}
+  catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(e&&e.message==='用户已删除'?_('errorDeletedUser'):e&&e.message==='用户已存在'?_('errorUserExists'):_('syncFail'));renderTeacherSettings(document.getElementById('teacherMain'));return;}
   hideLoading();
   showToast(_('teacherAdded'));renderTeacherSettings(document.getElementById('teacherMain'));
+  fetchDataFromApi().then(()=>{updateSyncStatus(true);renderTeacherSettings(document.getElementById('teacherMain'));}).catch(()=>updateSyncStatus(false));
 }
 
 async function deleteUser(name){
@@ -1230,7 +1241,7 @@ async function resetAppCaches(){
   try{localStorage.setItem('italiano_app_version',APP_VERSION);}catch(e){}
 }
 if('serviceWorker' in navigator){
-  resetAppCaches().then(()=>navigator.serviceWorker.register('/italiano-checkin/sw.js?v=20')).then(reg=>reg.update()).catch(()=>{});
+  resetAppCaches().then(()=>navigator.serviceWorker.register('/italiano-checkin/sw.js?v=21')).then(reg=>reg.update()).catch(()=>{});
 }
 
 document.addEventListener('keydown',e=>{if(e.key==='Enter'){if(document.getElementById('loginPage').classList.contains('active'))doLogin();}});
