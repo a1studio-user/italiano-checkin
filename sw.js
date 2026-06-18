@@ -1,4 +1,4 @@
-const CACHE = 'italiano-checkin-v20';
+const CACHE = 'italiano-checkin-v21';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
