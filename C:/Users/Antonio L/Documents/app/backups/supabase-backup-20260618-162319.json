@@ -1,0 +1,70 @@
+{
+  "created_at": "2026-06-18T08:23:11.7246367Z",
+  "source": "supabase",
+  "tables": {
+    "app_users": [
+      {
+        "username": "toni",
+        "password": "123456",
+        "role": "teacher",
+        "created_at": "2026-06-13T12:04:11.318364+08:00",
+        "updated_at": "2026-06-13T13:24:52.95+08:00"
+      }
+    ],
+    "daily_tasks": [
+      {
+        "task_date": "2026-06-15",
+        "homework": "背课文测试",
+        "dictation": "背单词测试",
+        "recite": "笔头作业测试",
+        "speaking": "",
+        "updated_at": "2026-06-15T15:26:02.394332+08:00"
+      },
+      {
+        "task_date": "__deleted_user__:asd",
+        "homework": "2026-06-15T07:42:00.874Z",
+        "dictation": "deleted-user",
+        "recite": "",
+        "speaking": "",
+        "updated_at": "2026-06-15T15:42:00.874+08:00"
+      },
+      {
+        "task_date": "__deleted_user__:qwe",
+        "homework": "2026-06-15T07:42:12.499Z",
+        "dictation": "deleted-user",
+        "recite": "",
+        "speaking": "",
+        "updated_at": "2026-06-15T15:42:12.499+08:00"
+      },
+      {
+        "task_date": "__deleted_user__:a1",
+        "homework": "2026-06-15T09:10:13.598Z",
+        "dictation": "deleted-user",
+        "recite": "",
+        "speaking": "",
+        "updated_at": "2026-06-15T17:10:13.598+08:00"
+      },
+      {
+        "task_date": "__deleted_user__:cs",
+        "homework": "2026-06-15T09:11:07.827Z",
+        "dictation": "deleted-user",
+        "recite": "",
+        "speaking": "",
+        "updated_at": "2026-06-15T17:11:07.827+08:00"
+      },
+      {
+        "task_date": "__deleted_user__:a",
+        "homework": "2026-06-18T08:21:55.498Z",
+        "dictation": "deleted-user",
+        "recite": "",
+        "speaking": "",
+        "updated_at": "2026-06-18T16:21:55.498+08:00"
+      }
+    ],
+    "student_tasks": [],
+    "checkins": [],
+    "streaks": [],
+    "chat_messages": [],
+    "hidden_chat_messages": []
+  }
+}
