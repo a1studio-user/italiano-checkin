@@ -478,6 +478,7 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
 let appData=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
 function getToken(){return SUPABASE_ANON_KEY;}
 function setToken(t){}
@@ -826,6 +827,8 @@ function updateSyncStatus(ok){
 }
 
 async function switchTeacherTab(tab){
+  currentTeacherTab=tab;
+  const viewEpoch=++teacherViewEpoch;
   document.querySelectorAll('#teacherNav .nav-item').forEach(b=>b.classList.remove('active'));
   const map={students:0,tasks:1,podium:2,chat:3,settings:4};
   document.querySelectorAll('#teacherNav .nav-item')[map[tab]].classList.add('active');
@@ -834,15 +837,21 @@ async function switchTeacherTab(tab){
     if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
     if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}
     main.innerHTML='<div class="empty-state"><div class="icon">⏳</div>'+_('loading')+'</div>';
-    try{await fetchDataFromApi();updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+    try{await fetchDataFromApi();if(currentTeacherTab!==tab||teacherViewEpoch!==viewEpoch)return;updateSyncStatus(true);}catch(e){if(currentTeacherTab!==tab||teacherViewEpoch!==viewEpoch)return;updateSyncStatus(false);}
+    if(currentTeacherTab!==tab||teacherViewEpoch!==viewEpoch)return;
     renderTeacherStudents(main);
-    teacherRefreshTimer=setInterval(async()=>{try{await fetchDataFromApi();renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}catch(e){updateSyncStatus(false);}},20000);
+    teacherRefreshTimer=setInterval(async()=>{
+      if(currentTeacherTab!=='students')return;
+      const pollEpoch=teacherViewEpoch;
+      try{await fetchDataFromApi();if(currentTeacherTab!=='students'||teacherViewEpoch!==pollEpoch)return;renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}catch(e){if(currentTeacherTab==='students'&&teacherViewEpoch===pollEpoch)updateSyncStatus(false);}
+    },20000);
   }
   else if(tab==='tasks'){
     if(chatTimer){clearInterval(chatTimer);chatTimer=null;}
     if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}
     main.innerHTML='<div class="empty-state"><div class="icon">⏳</div>'+_('loading')+'</div>';
-    try{await fetchDataFromApi();updateSyncStatus(true);}catch(e){updateSyncStatus(false);}
+    try{await fetchDataFromApi();if(currentTeacherTab!==tab||teacherViewEpoch!==viewEpoch)return;updateSyncStatus(true);}catch(e){if(currentTeacherTab!==tab||teacherViewEpoch!==viewEpoch)return;updateSyncStatus(false);}
+    if(currentTeacherTab!==tab||teacherViewEpoch!==viewEpoch)return;
     renderTeacherTasks(main);
   }
   else if(tab==='podium'){if(chatTimer){clearInterval(chatTimer);chatTimer=null;}if(teacherRefreshTimer){clearInterval(teacherRefreshTimer);teacherRefreshTimer=null;}renderTeacherPodium(main);}
@@ -869,9 +878,10 @@ function renderTeacherStudents(main){
 }
 
 async function refreshTeacherStudents(){
+  const viewEpoch=teacherViewEpoch;
   showLoading(_('syncing'));
-  try{await fetchDataFromApi();renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}
-  catch(e){updateSyncStatus(false);showToast(_('syncFail'));}
+  try{await fetchDataFromApi();if(currentTeacherTab==='students'&&teacherViewEpoch===viewEpoch){renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}}
+  catch(e){if(currentTeacherTab==='students'&&teacherViewEpoch===viewEpoch){updateSyncStatus(false);showToast(_('syncFail'));}}
   hideLoading();
 }
 
@@ -1018,15 +1028,17 @@ async function saveToken(){
 }
 
 async function refreshCloudData(){
+  const viewEpoch=teacherViewEpoch;
   showLoading(_('syncing'));
-  try{await fetchDataFromApi();updateSyncStatus(true);showToast(_('syncOK'));renderTeacherSettings(document.getElementById('teacherMain'));}
-  catch(e){updateSyncStatus(false);showToast(_('syncFail'));}
+  try{await fetchDataFromApi();if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch){updateSyncStatus(true);showToast(_('syncOK'));renderTeacherSettings(document.getElementById('teacherMain'));}}
+  catch(e){if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch){updateSyncStatus(false);showToast(_('syncFail'));}}
   hideLoading();
 }
 
 function clearToken(){refreshCloudData();}
 
 async function addAccount(){
+  const viewEpoch=teacherViewEpoch;
   const u=document.getElementById('newAccountUser').value.trim(),p=document.getElementById('newAccountPass').value;
   let role=(document.getElementById('newAccountRole')||{}).value||'student';
   if(currentUser.username!=='toni')role='student';
@@ -1038,9 +1050,9 @@ async function addAccount(){
   appData.users[u]={password:p,role};
   showLoading(_('syncing'));
   try{await supabaseCreateNewUser(u,p,role);saveLocalData();updateSyncStatus(true);}
-  catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(e&&e.message==='用户已删除'?_('errorDeletedUser'):e&&e.message==='用户已存在'?_('errorUserExists'):_('syncFail'));renderTeacherSettings(document.getElementById('teacherMain'));return;}
+  catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(e&&e.message==='用户已删除'?_('errorDeletedUser'):e&&e.message==='用户已存在'?_('errorUserExists'):_('syncFail'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));return;}
   hideLoading();
-  showToast(_('teacherAdded'));renderTeacherSettings(document.getElementById('teacherMain'));
+  showToast(_('teacherAdded'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
 async function resetStudentPassword(){
@@ -1066,16 +1078,16 @@ async function resetStudentPassword(){
 }
 
 async function deleteUser(name){
+  const viewEpoch=teacherViewEpoch;
   if(!confirm(_('confirmDeleteUser')+' "'+name+'"？'+_('confirmDeleteUserMsg')))return;
   const before=cloneData(appData);
   delete appData.users[name];delete appData.checkins[name];delete appData.streaks[name];
   if(appData.studentTasks)delete appData.studentTasks[name];
   showLoading(_('syncing'));
   try{await deleteAccountStrict(name);saveLocalData();updateSyncStatus(true);}
-  catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(_('syncFail'));renderTeacherSettings(document.getElementById('teacherMain'));return;}
+  catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(_('syncFail'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));return;}
   hideLoading();
-  showToast(_('userDeleted'));renderTeacherSettings(document.getElementById('teacherMain'));
-  fetchDataFromApi().then(()=>{updateSyncStatus(true);renderTeacherSettings(document.getElementById('teacherMain'));}).catch(()=>updateSyncStatus(false));
+  showToast(_('userDeleted'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
 // ===== STUDENT =====
@@ -1086,6 +1098,9 @@ function showStudentPage(){
 }
 
 function switchStudentTab(tab){
+  currentStudentTab=tab;
+  studentViewEpoch++;
+  if(tab!=='chat'&&chatTimer){clearInterval(chatTimer);chatTimer=null;}
   document.querySelectorAll('#studentNav .nav-item').forEach(b=>b.classList.remove('active'));
   const map={tasks:0,podium:1,chat:2,settings:3};
   document.querySelectorAll('#studentNav .nav-item')[map[tab]].classList.add('active');
@@ -1105,14 +1120,19 @@ function renderStudentTasks(main){
 }
 
 async function refreshStudentTasks(){
+  const viewEpoch=studentViewEpoch;
   showLoading(_('syncing'));
   try{
     await fetchDataFromApi();
-    renderStudentTasks(document.getElementById('studentMain'));
-    updateSyncStatus(true);
+    if(currentStudentTab==='tasks'&&studentViewEpoch===viewEpoch){
+      renderStudentTasks(document.getElementById('studentMain'));
+      updateSyncStatus(true);
+    }
   }catch(e){
-    updateSyncStatus(false);
-    showToast(_('syncFail'));
+    if(currentStudentTab==='tasks'&&studentViewEpoch===viewEpoch){
+      updateSyncStatus(false);
+      showToast(_('syncFail'));
+    }
   }
   hideLoading();
 }
