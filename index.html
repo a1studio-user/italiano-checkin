@@ -60,7 +60,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helv
 .task-card .task-icon.rc{background:#f3e5f5}.task-card .task-icon.sp{background:#e8f5e9}
 .task-info{flex:1;min-width:0}
 .task-info .task-name{font-weight:700;font-size:14px}
-.task-info .task-content{font-size:13px;color:#555;margin-top:6px;background:#f9f9f9;padding:10px 12px;border-radius:8px;line-height:1.6;word-break:break-all}
+.task-info .task-content{font-size:13px;color:#555;margin-top:6px;background:#f9f9f9;padding:10px 12px;border-radius:8px;line-height:1.6;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word;hyphens:none;-webkit-hyphens:none}
 .checkin-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
 .checkin-row:last-child{border-bottom:none}
 .checkin-row .ci-icon{font-size:22px;width:36px;text-align:center;flex-shrink:0}
@@ -505,8 +505,8 @@ async function fetchSupabaseData(){
   if(results[0].status!=='fulfilled')throw results[0].reason;
   const fallback=appData||loadLocalData();
   const users=results[0].value||[];
-  const daily=results[1].status==='fulfilled'?results[1].value||[]:Object.entries(fallback.dailyTasks||{}).map(([task_date,t])=>Object.assign({task_date},t));
-  const student=results[2].status==='fulfilled'?results[2].value||[]:Object.entries(fallback.studentTasks||{}).flatMap(([username,dates])=>Object.entries(dates||{}).map(([task_date,t])=>Object.assign({username,task_date},t)));
+  const daily=results[1].status==='fulfilled'?results[1].value||[]:[];
+  const student=results[2].status==='fulfilled'?results[2].value||[]:[];
   const checkins=results[3].status==='fulfilled'?results[3].value||[]:Object.entries(fallback.checkins||{}).flatMap(([username,dates])=>Object.entries(dates||{}).map(([checkin_date,c])=>Object.assign({username,checkin_date},c)));
   const streaks=results[4].status==='fulfilled'?results[4].value||[]:Object.entries(fallback.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null}));
   const chat=results[5].status==='fulfilled'?results[5].value||[]:fallback.chatMessages||[];
@@ -569,6 +569,20 @@ async function saveDataNow(msg,pending){
 const LK='italiano_local_data';
 function loadLocalData(){const r=localStorage.getItem(LK);return r?normalizeData(JSON.parse(r)):getInitialData();}
 function saveLocalData(){localStorage.setItem(LK,JSON.stringify(appData));}
+function clearLegacyDefaultTaskCache(){
+  const version='blank-tasks-v1';
+  if(localStorage.getItem('italiano_task_cache_version')===version)return;
+  try{
+    const raw=localStorage.getItem(LK);
+    if(raw){
+      const data=JSON.parse(raw);
+      data.dailyTasks={};
+      data.studentTasks={};
+      localStorage.setItem(LK,JSON.stringify(data));
+    }
+  }catch(e){}
+  localStorage.setItem('italiano_task_cache_version',version);
+}
 function clearLegacyPendingUsers(){localStorage.removeItem(PENDING_USERS_KEY);}
 function removePendingUser(username){clearLegacyPendingUsers();}
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
@@ -1114,7 +1128,7 @@ function renderStudentTasks(main){
   const today=getToday();
   const cfgs=getTaskConfigs();
   main.innerHTML=`<div class="section-title">📅 ${formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`+
-    cfgs.map(c=>{const content=getTaskForStudent(currentUser.username,today,c.key);return`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content">${content}</div></div></div>`;}).join('')+
+    cfgs.map(c=>{const content=getTaskForStudent(currentUser.username,today,c.key);return`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content" lang="it">${content}</div></div></div>`;}).join('')+
     `<div style="text-align:center;color:#bbb;font-size:12px;margin-top:12px">${_('taskReadonlyHint')}</div><div class="footer">${_('footer')}</div>`;
 }
 
@@ -1302,6 +1316,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'){if(document.getEleme
 
 // ===== INIT =====
 clearLegacyPendingUsers();
+clearLegacyDefaultTaskCache();
 if(location.protocol.startsWith('http')&&new URLSearchParams(location.search).get('v')!==APP_VERSION.slice(1)){
   location.replace(location.pathname+'?v='+APP_VERSION.slice(1));
 }
