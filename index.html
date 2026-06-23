@@ -993,6 +993,9 @@ function renderTeacherPodium(main){main.innerHTML=renderPodiumHTML();}
 // ===== TEACHER: Settings =====
 function renderTeacherSettings(main){
   const users=Object.entries(appData.users);
+  const teacherUsers=users.filter(([,info])=>info.role==='teacher').sort(([a],[b])=>a.localeCompare(b));
+  const studentUsers=users.filter(([,info])=>info.role==='student').sort(([a],[b])=>a.localeCompare(b));
+  const renderUserRows=list=>list.length?list.map(([name,info])=>`<div class="user-list-item"><div><b>${name}</b> <span class="role-tag ${info.role}">${info.role==='teacher'?_('settingsTeacher'):_('settingsStudent')}</span></div>${name!=='toni'?`<button type="button" class="btn-sm danger" onclick="deleteUser('${name}')">${_('settingsDelete')}</button>`:'<span style="font-size:11px;color:#999">'+_('settingsMainAdmin')+'</span>'}</div>`).join(''):`<div class="empty-state" style="padding:16px">--</div>`;
   let ts=`<div class="settings-card"><h4>${_('settingsToken')}</h4><div style="display:flex;align-items:center;gap:10px"><span style="color:#009246;font-weight:600;">${_('settingsTokenOk')}</span><button class="btn-sm outline" onclick="refreshCloudData()">${_('settingsTokenChange')}</button></div><div class="hint">${_('settingsTokenHint')}</div></div>`;
   const canAddTeacher=currentUser&&currentUser.username==='toni';
   const addAccountCard=`<div class="settings-card"><h4>${canAddTeacher?_('settingsAddTeacher'):_('settingsAddStudent')}</h4>${canAddTeacher?`<select id="newAccountRole" style="margin-bottom:10px"><option value="student">${_('settingsStudent')}</option><option value="teacher">${_('settingsTeacher')}</option></select>`:`<input type="hidden" id="newAccountRole" value="student">`}<div class="row"><input type="text" id="newAccountUser" placeholder="${_('settingsTeacherUser')}" style="flex:1" autocapitalize="none"><input type="password" id="newAccountPass" placeholder="${_('settingsTeacherPass')}" style="flex:1"><button type="button" class="btn-sm primary" onclick="addAccount()">${_('settingsAdd')}</button></div></div>`;
@@ -1015,7 +1018,12 @@ function renderTeacherSettings(main){
       </div>
       ${addAccountCard}
       <div class="settings-card"><h4>${_('settingsResetStudentPassword')}</h4><input type="text" id="resetStudentUser" placeholder="${_('settingsTeacherUser')}" autocapitalize="none"><button type="button" class="btn-sm primary" style="width:100%" onclick="resetStudentPassword()">${_('settingsResetStudentBtn')}</button><div class="hint">${_('settingsResetStudentHint')}</div></div>
-      <div class="settings-card"><h4>${_('settingsUsers')}</h4>${users.map(([name,info])=>`<div class="user-list-item"><div><b>${name}</b> <span class="role-tag ${info.role}">${info.role==='teacher'?_('settingsTeacher'):_('settingsStudent')}</span></div>${name!=='toni'?`<button class="btn-sm danger" onclick="deleteUser('${name}')">${_('settingsDelete')}</button>`:'<span style="font-size:11px;color:#999">'+_('settingsMainAdmin')+'</span>'}</div>`).join('')}</div>
+      <div class="settings-card"><h4>${_('settingsUsers')}</h4>
+        <div class="submenu-toggle" onclick="toggleSubmenu(this,'teacherUsersSub')"><span>👨‍🏫 ${_('settingsTeacher')} (${teacherUsers.length})</span><span class="arrow">▶</span></div>
+        <div class="submenu-body" id="teacherUsersSub" style="margin-bottom:8px">${renderUserRows(teacherUsers)}</div>
+        <div class="submenu-toggle" onclick="toggleSubmenu(this,'studentUsersSub')"><span>🎓 ${_('settingsStudent')} (${studentUsers.length})</span><span class="arrow">▶</span></div>
+        <div class="submenu-body" id="studentUsersSub">${renderUserRows(studentUsers)}</div>
+      </div>
     </div>
     <button class="logout-danger" onclick="doLogout()">${_('settingsLogout')}</button>
     <div class="footer">${_('footer')}</div>
