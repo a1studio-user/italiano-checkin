@@ -310,7 +310,7 @@ const I18N = {
     settingsUsers:'👤 所有用户', settingsMainAdmin:'主管理员', settingsDelete:'删除', settingsTeacher:'教师', settingsStudent:'学生',
     settingsLogout:'🚪 退出账号', settingsMyAccount:'👤 我的账号', settingsContactTeacher:'如需修改密码，请联系教师。',
     settingsLanguage:'🌐 界面语言', settingsAccount:'👤 账号', settingsChangePassword:'🔒 更改密码',
-    settingsOldPassword:'当前密码', settingsNewPassword:'新密码', settingsNewPassword2:'确认新密码',
+    settingsOldPassword:'当前密码', settingsNewPassword:'新密码', settingsNewPassword2:'确认新密码', refreshTasks:'刷新作业', settingsResetStudentPassword:'🔑 重置学生密码', settingsResetStudentHint:'输入学生用户名，将密码重置为 123456', settingsResetStudentBtn:'重置密码', settingsStudentPwdReset:'✅ 学生密码已重置为 123456',
     settingsChangePwdBtn:'修改密码', settingsPwdChanged:'✅ 密码已修改', settingsPwdWrong:'当前密码错误',
     chatRefresh:'🔄 刷新消息', chatPlaceholder:'输入消息...', chatEmpty:'暂无消息，来打个招呼吧！', chatGroupHint:'群组聊天 · 所有师生可见 · 长按消息可删除',
     confirmDeleteChat:'确定删除这条消息？', chatDeleted:'✅ 消息已删除',
@@ -356,7 +356,7 @@ const I18N = {
     settingsUsers:'👤 All Users', settingsMainAdmin:'Main Admin', settingsDelete:'Delete', settingsTeacher:'Teacher', settingsStudent:'Student',
     settingsLogout:'🚪 Logout', settingsMyAccount:'👤 My Account', settingsContactTeacher:'Contact your teacher to change password.',
     settingsLanguage:'🌐 Language', settingsAccount:'👤 Account', settingsChangePassword:'🔒 Change Password',
-    settingsOldPassword:'Current Password', settingsNewPassword:'New Password', settingsNewPassword2:'Confirm New Password',
+    settingsOldPassword:'Current Password', settingsNewPassword:'New Password', settingsNewPassword2:'Confirm New Password', refreshTasks:'Refresh Tasks', settingsResetStudentPassword:'🔑 Reset Student Password', settingsResetStudentHint:'Enter a student username to reset the password to 123456', settingsResetStudentBtn:'Reset Password', settingsStudentPwdReset:'✅ Student password reset to 123456',
     settingsChangePwdBtn:'Change Password', settingsPwdChanged:'✅ Password changed', settingsPwdWrong:'Current password is incorrect',
     chatRefresh:'🔄 Refresh', chatPlaceholder:'Type a message...', chatEmpty:'No messages yet. Say hello!', chatGroupHint:'Group chat · Visible to all · Long press to delete',
     confirmDeleteChat:'Delete this message?', chatDeleted:'✅ Message deleted',
@@ -402,7 +402,7 @@ const I18N = {
     settingsUsers:'👤 Tutti gli utenti', settingsMainAdmin:'Admin principale', settingsDelete:'Elimina', settingsTeacher:'Insegnante', settingsStudent:'Studente',
     settingsLogout:'🚪 Esci', settingsMyAccount:'👤 Il mio account', settingsContactTeacher:'Contatta l\'insegnante per cambiare password.',
     settingsLanguage:'🌐 Lingua', settingsAccount:'👤 Account', settingsChangePassword:'🔒 Cambia password',
-    settingsOldPassword:'Password attuale', settingsNewPassword:'Nuova password', settingsNewPassword2:'Conferma nuova password',
+    settingsOldPassword:'Password attuale', settingsNewPassword:'Nuova password', settingsNewPassword2:'Conferma nuova password', refreshTasks:'Aggiorna compiti', settingsResetStudentPassword:'🔑 Reimposta password studente', settingsResetStudentHint:'Inserisci il nome utente dello studente; la password sarà 123456', settingsResetStudentBtn:'Reimposta password', settingsStudentPwdReset:'✅ Password studente reimpostata a 123456',
     settingsChangePwdBtn:'Cambia password', settingsPwdChanged:'✅ Password cambiata', settingsPwdWrong:'Password attuale errata',
     chatRefresh:'🔄 Aggiorna', chatPlaceholder:'Scrivi un messaggio...', chatEmpty:'Nessun messaggio. Di\' ciao!', chatGroupHint:'Chat di gruppo · Visibile a tutti · Premi a lungo per eliminare',
     confirmDeleteChat:'Eliminare questo messaggio?', chatDeleted:'✅ Messaggio eliminato',
@@ -985,7 +985,7 @@ function renderTeacherSettings(main){
   const users=Object.entries(appData.users);
   let ts=`<div class="settings-card"><h4>${_('settingsToken')}</h4><div style="display:flex;align-items:center;gap:10px"><span style="color:#009246;font-weight:600;">${_('settingsTokenOk')}</span><button class="btn-sm outline" onclick="refreshCloudData()">${_('settingsTokenChange')}</button></div><div class="hint">${_('settingsTokenHint')}</div></div>`;
   const canAddTeacher=currentUser&&currentUser.username==='toni';
-  const addAccountCard=`<div class="settings-card"><h4>${canAddTeacher?_('settingsAddTeacher'):_('settingsAddStudent')}</h4>${canAddTeacher?`<select id="newAccountRole" style="margin-bottom:10px"><option value="student">${_('settingsStudent')}</option><option value="teacher">${_('settingsTeacher')}</option></select>`:`<input type="hidden" id="newAccountRole" value="student">`}<div class="row"><input type="text" id="newAccountUser" placeholder="${_('settingsTeacherUser')}" style="flex:1" autocapitalize="none"><input type="password" id="newAccountPass" placeholder="${_('settingsTeacherPass')}" style="flex:1"><button class="btn-sm primary" onclick="addAccount()">${_('settingsAdd')}</button></div></div>`;
+  const addAccountCard=`<div class="settings-card"><h4>${canAddTeacher?_('settingsAddTeacher'):_('settingsAddStudent')}</h4>${canAddTeacher?`<select id="newAccountRole" style="margin-bottom:10px"><option value="student">${_('settingsStudent')}</option><option value="teacher">${_('settingsTeacher')}</option></select>`:`<input type="hidden" id="newAccountRole" value="student">`}<div class="row"><input type="text" id="newAccountUser" placeholder="${_('settingsTeacherUser')}" style="flex:1" autocapitalize="none"><input type="password" id="newAccountPass" placeholder="${_('settingsTeacherPass')}" style="flex:1"><button type="button" class="btn-sm primary" onclick="addAccount()">${_('settingsAdd')}</button></div></div>`;
 
   main.innerHTML=ts+`
     <div class="settings-card"><h4>${_('settingsLanguage')}</h4>
@@ -1004,6 +1004,7 @@ function renderTeacherSettings(main){
         <button class="btn-sm primary" style="width:100%" onclick="changeOwnPassword()">${_('settingsChangePwdBtn')}</button>
       </div>
       ${addAccountCard}
+      <div class="settings-card"><h4>${_('settingsResetStudentPassword')}</h4><input type="text" id="resetStudentUser" placeholder="${_('settingsTeacherUser')}" autocapitalize="none"><button type="button" class="btn-sm primary" style="width:100%" onclick="resetStudentPassword()">${_('settingsResetStudentBtn')}</button><div class="hint">${_('settingsResetStudentHint')}</div></div>
       <div class="settings-card"><h4>${_('settingsUsers')}</h4>${users.map(([name,info])=>`<div class="user-list-item"><div><b>${name}</b> <span class="role-tag ${info.role}">${info.role==='teacher'?_('settingsTeacher'):_('settingsStudent')}</span></div>${name!=='toni'?`<button class="btn-sm danger" onclick="deleteUser('${name}')">${_('settingsDelete')}</button>`:'<span style="font-size:11px;color:#999">'+_('settingsMainAdmin')+'</span>'}</div>`).join('')}</div>
     </div>
     <button class="logout-danger" onclick="doLogout()">${_('settingsLogout')}</button>
@@ -1040,7 +1041,28 @@ async function addAccount(){
   catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(e&&e.message==='用户已删除'?_('errorDeletedUser'):e&&e.message==='用户已存在'?_('errorUserExists'):_('syncFail'));renderTeacherSettings(document.getElementById('teacherMain'));return;}
   hideLoading();
   showToast(_('teacherAdded'));renderTeacherSettings(document.getElementById('teacherMain'));
-  fetchDataFromApi().then(()=>{updateSyncStatus(true);renderTeacherSettings(document.getElementById('teacherMain'));}).catch(()=>updateSyncStatus(false));
+}
+
+async function resetStudentPassword(){
+  const input=document.getElementById('resetStudentUser');
+  const username=(input&&input.value||'').trim();
+  if(!username){showToast(_('errorFill'));return;}
+  showLoading(_('syncing'));
+  try{
+    const user=await supabaseGetUser(username);
+    if(!user||user.role!=='student'){hideLoading();showToast(_('errorNotFound'));return;}
+    await supabaseCreateUser(username,'123456','student');
+    if(!appData.users[username])appData.users[username]={role:'student',password:'123456'};
+    else appData.users[username].password='123456';
+    saveLocalData();
+    updateSyncStatus(true);
+    if(input)input.value='';
+    showToast(_('settingsStudentPwdReset'));
+  }catch(e){
+    updateSyncStatus(false);
+    showToast(_('syncFail'));
+  }
+  hideLoading();
 }
 
 async function deleteUser(name){
@@ -1077,9 +1099,22 @@ function switchStudentTab(tab){
 function renderStudentTasks(main){
   const today=getToday();
   const cfgs=getTaskConfigs();
-  main.innerHTML=`<div class="section-title">📅 ${formatDate(today)}</div>`+
+  main.innerHTML=`<div class="section-title">📅 ${formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`+
     cfgs.map(c=>{const content=getTaskForStudent(currentUser.username,today,c.key);return`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content">${content}</div></div></div>`;}).join('')+
     `<div style="text-align:center;color:#bbb;font-size:12px;margin-top:12px">${_('taskReadonlyHint')}</div><div class="footer">${_('footer')}</div>`;
+}
+
+async function refreshStudentTasks(){
+  showLoading(_('syncing'));
+  try{
+    await fetchDataFromApi();
+    renderStudentTasks(document.getElementById('studentMain'));
+    updateSyncStatus(true);
+  }catch(e){
+    updateSyncStatus(false);
+    showToast(_('syncFail'));
+  }
+  hideLoading();
 }
 
 function renderStudentPodium(main){
