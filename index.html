@@ -529,15 +529,6 @@ async function fetchSupabaseData(){
   return normalizeData(data);
 }
 
-const defaultTasks={
-  homework:['背诵课本指定课文第 1 段','背诵今日课堂短文，要求流利完整','背诵对话：问候、自我介绍和告别','背诵一段关于 La mia giornata 的短文','背诵老师指定的课文内容'],
-  dictation:['背诵单词：casa, scuola, amico, libro, tavolo','背诵颜色词：rosso, blu, verde, giallo, bianco','背诵家庭成员：madre, padre, fratello, sorella, nonna','背诵食物词汇：pane, acqua, latte, frutta, pesce','背诵星期和月份词汇'],
-  recite:['完成课本练习题 1-5','抄写今日单词，每个 3 遍','用今日词汇造 5 个句子','翻译老师指定句子','整理今日语法笔记'],
-  speaking:['']
-};
-
-function getDefaultTask(cat,ds){let h=0;for(let i=0;i<ds.length;i++){h=((h<<5)-h)+ds.charCodeAt(i);h|=0;}return defaultTasks[cat][Math.abs(h)%defaultTasks[cat].length];}
-
 function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{}};}
 
 function normalizeData(data){
@@ -738,7 +729,7 @@ function getTaskForStudent(student,date,cat){
   if(st[student]&&st[student][date]&&st[student][date][cat])return st[student][date][cat];
   const dt=appData.dailyTasks||{};
   if(dt[date]&&dt[date][cat])return dt[date][cat];
-  return getDefaultTask(cat,date);
+  return '';
 }
 function getTaskKeys(){return ['homework','dictation','recite'];}
 function getTaskConfigs(){return [
