@@ -312,6 +312,7 @@ const I18N = {
     taskDefaultOption:'📋 默认（所有学生）', taskSave:'💾 保存', taskSaved:'作业已保存', taskSyncSaved:'并同步',
     taskHomework:'📖 背课文', taskDictation:'🔤 背单词', taskRecite:'✍️ 笔头作业', taskSpeaking:'🗣️ 口语 · Conversazione',
     taskItalian:'意大利语', taskPortfolio:'作品集', taskTargetClass:'🏫 班级', taskTargetStudent:'👤 学生', taskClassOption:'🏫 班级：', taskPortfolioTitle:'作品集',
+    taskPortfolioContent:'作品集作业',
     classManage:'🏫 班级管理', className:'班级名称', classCreate:'新建班级', classAddStudent:'加入班级', classRename:'改名', classDelete:'删除班级', classRemoveStudent:'移出', classUnassigned:'未分班学生', classCreated:'✅ 班级已保存', classUpdated:'✅ 班级已更新',
     classChooseStudent:'请选择学生',
     programItalian:'意大利语', programPortfolio:'作品集', programTitle:'专业分类', programSaved:'✅ 专业已更新',
@@ -362,6 +363,7 @@ const I18N = {
     taskDefaultOption:'📋 Default (All Students)', taskSave:'💾 Save', taskSaved:'Tasks saved', taskSyncSaved:'and synced',
     taskHomework:'📖 Text Recitation', taskDictation:'🔤 Word Recitation', taskRecite:'✍️ Written Work', taskSpeaking:'🗣️ Speaking · Conversazione',
     taskItalian:'Italian', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Class', taskTargetStudent:'👤 Student', taskClassOption:'🏫 Class: ', taskPortfolioTitle:'Portfolio',
+    taskPortfolioContent:'Portfolio Task',
     classManage:'🏫 Class Management', className:'Class name', classCreate:'Create class', classAddStudent:'Add to class', classRename:'Rename', classDelete:'Delete class', classRemoveStudent:'Remove', classUnassigned:'Unassigned students', classCreated:'✅ Class saved', classUpdated:'✅ Class updated',
     classChooseStudent:'Select student',
     programItalian:'Italian', programPortfolio:'Portfolio', programTitle:'Major category', programSaved:'✅ Category updated',
@@ -412,6 +414,7 @@ const I18N = {
     taskDefaultOption:'📋 Predefinito (tutti)', taskSave:'💾 Salva', taskSaved:'Compiti salvati', taskSyncSaved:'e sincronizzati',
     taskHomework:'📖 Recita il testo', taskDictation:'🔤 Recita parole', taskRecite:'✍️ Compiti scritti', taskSpeaking:'🗣️ Conversazione',
     taskItalian:'Italiano', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Classe', taskTargetStudent:'👤 Studente', taskClassOption:'🏫 Classe: ', taskPortfolioTitle:'Portfolio',
+    taskPortfolioContent:'Compito portfolio',
     classManage:'🏫 Gestione classi', className:'Nome classe', classCreate:'Crea classe', classAddStudent:'Aggiungi alla classe', classRename:'Rinomina', classDelete:'Elimina classe', classRemoveStudent:'Rimuovi', classUnassigned:'Studenti senza classe', classCreated:'✅ Classe salvata', classUpdated:'✅ Classe aggiornata',
     classChooseStudent:'Seleziona studente',
     programItalian:'Italiano', programPortfolio:'Portfolio', programTitle:'Categoria', programSaved:'✅ Categoria aggiornata',
@@ -803,6 +806,27 @@ function getTaskForStudent(student,date,cat,program){
   if(dt[key]&&dt[key][cat])return dt[key][cat];
   return '';
 }
+function portfolioTextFromTask(t){
+  if(!t)return '';
+  if(t.homework)return t.homework;
+  return [t.dictation,t.recite,t.speaking].filter(Boolean).join('\n');
+}
+function getPortfolioTaskForStudent(student,date){
+  const key=taskStorageDate(date,'portfolio');
+  const st=appData.studentTasks||{};
+  if(st[student]&&st[student][key]){
+    const text=portfolioTextFromTask(st[student][key]);
+    if(text)return text;
+  }
+  const cls=getStudentClass(student);
+  const ct=appData.classTasks||{};
+  if(cls&&ct[cls]&&ct[cls][key]){
+    const text=portfolioTextFromTask(ct[cls][key]);
+    if(text)return text;
+  }
+  const dt=appData.dailyTasks||{};
+  return portfolioTextFromTask(dt[key]);
+}
 function getStudentPrograms(name){
   normalizeData(appData);
   return (appData.studentPrograms&&appData.studentPrograms[name])||{italian:true,portfolio:false};
@@ -1118,17 +1142,21 @@ function renderTeacherTasks(main){
     const cls=teacherTaskStudent.slice(6);
     tasks=((appData.classTasks||{})[cls]||{})[storageDate]||{};
   }else{const name=teacherTaskStudent.replace(/^student:/,'');tasks=((appData.studentTasks||{})[name]||{})[storageDate]||{};}
+  const portfolioText=portfolioTextFromTask(tasks);
   const targetOptions=`<option value="__default__" ${teacherTaskStudent==='__default__'?'selected':''}>${_('taskDefaultOption')}</option>`+
     classNames.map(c=>`<option value="class:${c}" ${teacherTaskStudent==='class:'+c?'selected':''}>${_('taskClassOption')}${c}</option>`).join('')+
     students.map(s=>`<option value="student:${s}" ${teacherTaskStudent==='student:'+s||teacherTaskStudent===s?'selected':''}>👤 ${s}</option>`).join('');
+  const editorFields=teacherTaskProgram==='portfolio'
+    ? `<div class="cat-label">${_('taskPortfolioContent')}</div><textarea id="editPortfolio" placeholder="${_('taskPortfolioContent')}" style="min-height:220px">${portfolioText}</textarea>`
+    : `<div class="cat-label">${_('taskHomework')}</div><textarea id="editHomework" placeholder="${_('taskHomework')}">${tasks.homework||''}</textarea>
+    <div class="cat-label">${_('taskDictation')}</div><textarea id="editDictation" placeholder="${_('taskDictation')}">${tasks.dictation||''}</textarea>
+    <div class="cat-label">${_('taskRecite')}</div><textarea id="editRecite" placeholder="${_('taskRecite')}">${tasks.recite||''}</textarea>`;
   main.innerHTML=`<div class="task-editor">
     <div style="background:#fffbe6;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#996;line-height:1.5">${_('taskDefaultHint')}</div>
     <div class="program-switch"><button type="button" class="${teacherTaskProgram==='italian'?'active':''}" onclick="changeTaskProgram('italian')">${_('taskItalian')}</button><button type="button" class="${teacherTaskProgram==='portfolio'?'active':''}" onclick="changeTaskProgram('portfolio')">${_('taskPortfolio')}</button></div>
     <div class="row"><select id="taskStudent" onchange="changeTaskStudent()">${targetOptions}</select></div>
     <div class="row"><input type="date" id="taskDate" value="${today}" onchange="loadTaskForDate()"><button class="btn-sm primary" onclick="saveTeacherTasks()">${_('taskSave')}</button></div>
-    <div class="cat-label">${_('taskHomework')}</div><textarea id="editHomework" placeholder="${_('taskHomework')}">${tasks.homework||''}</textarea>
-    <div class="cat-label">${_('taskDictation')}</div><textarea id="editDictation" placeholder="${_('taskDictation')}">${tasks.dictation||''}</textarea>
-    <div class="cat-label">${_('taskRecite')}</div><textarea id="editRecite" placeholder="${_('taskRecite')}">${tasks.recite||''}</textarea>
+    ${editorFields}
     <button class="btn-sm primary" style="width:100%;padding:12px;font-size:15px;margin-top:8px" onclick="saveTeacherTasks()">${_('taskSave')}</button>
   </div>`;
 }
@@ -1144,6 +1172,10 @@ function loadTaskForDate(){
     const cls=teacherTaskStudent.slice(6);
     tasks=((appData.classTasks||{})[cls]||{})[storageDate]||{};
   }else{const name=teacherTaskStudent.replace(/^student:/,'');tasks=((appData.studentTasks||{})[name]||{})[storageDate]||{};}
+  if(teacherTaskProgram==='portfolio'){
+    document.getElementById('editPortfolio').value=portfolioTextFromTask(tasks);
+    return;
+  }
   document.getElementById('editHomework').value=tasks.homework||'';
   document.getElementById('editDictation').value=tasks.dictation||'';
   document.getElementById('editRecite').value=tasks.recite||'';
@@ -1152,7 +1184,9 @@ function loadTaskForDate(){
 async function saveTeacherTasks(){
   const date=document.getElementById('taskDate').value;
   const storageDate=taskStorageDate(date,teacherTaskProgram);
-  const tasks={homework:document.getElementById('editHomework').value.trim(),dictation:document.getElementById('editDictation').value.trim(),recite:document.getElementById('editRecite').value.trim(),speaking:''};
+  const tasks=teacherTaskProgram==='portfolio'
+    ? {homework:document.getElementById('editPortfolio').value.trim(),dictation:'',recite:'',speaking:''}
+    : {homework:document.getElementById('editHomework').value.trim(),dictation:document.getElementById('editDictation').value.trim(),recite:document.getElementById('editRecite').value.trim(),speaking:''};
   if(teacherTaskStudent==='__default__'){if(!appData.dailyTasks[storageDate])appData.dailyTasks[storageDate]={};Object.assign(appData.dailyTasks[storageDate],tasks);}
   else if(teacherTaskStudent.startsWith('class:')){
     const cls=teacherTaskStudent.slice(6);
@@ -1370,14 +1404,18 @@ function renderStudentTasks(main){
   const cfgs=getTaskConfigs();
   const programs=getStudentPrograms(currentUser.username);
   if(!programs[studentTaskProgram])studentTaskProgram=programs.portfolio&&!programs.italian?'portfolio':'italian';
-  const renderSection=(program,title)=>{
-    const cards=cfgs.map(c=>({c,content:getTaskForStudent(currentUser.username,today,c.key,program)})).filter(x=>x.content).map(({c,content})=>`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content" lang="it">${content}</div></div></div>`).join('');
-    return `${title?`<div class="section-title">${title}</div>`:''}${cards}`;
+  const renderItalianSection=()=>{
+    return cfgs.map(c=>({c,content:getTaskForStudent(currentUser.username,today,c.key,'italian')})).filter(x=>x.content).map(({c,content})=>`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content" lang="it">${content}</div></div></div>`).join('');
+  };
+  const renderPortfolioSection=()=>{
+    const content=getPortfolioTaskForStudent(currentUser.username,today);
+    if(!content)return '';
+    return `<div class="task-card"><div class="task-icon sp">🎨</div><div class="task-info"><div class="task-name">${_('taskPortfolioContent')}</div><div class="task-content">${content}</div></div></div>`;
   };
   const both=programs.italian&&programs.portfolio;
   let html=`<div class="section-title">${studentTaskProgram==='portfolio'?_('taskPortfolioTitle'):'📅 '+formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`;
   if(both)html+=`<div class="program-switch"><button type="button" class="${studentTaskProgram==='italian'?'active':''}" onclick="changeStudentTaskProgram('italian');return false;">${_('taskItalian')}</button><button type="button" class="${studentTaskProgram==='portfolio'?'active':''}" onclick="changeStudentTaskProgram('portfolio');return false;">${_('taskPortfolio')}</button></div>`;
-  html+=renderSection(studentTaskProgram,'');
+  html+=studentTaskProgram==='portfolio'?renderPortfolioSection():renderItalianSection();
   main.innerHTML=html+`<div style="text-align:center;color:#bbb;font-size:12px;margin-top:12px">${_('taskReadonlyHint')}</div><div class="footer">${_('footer')}</div>`;
 }
 
