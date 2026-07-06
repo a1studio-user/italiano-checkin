@@ -498,7 +498,7 @@ const SUPABASE_URL='https://imzxxbxdjwqfduwsqipz.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltenh4YnhkandxZmR1d3NxaXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTU0MzIsImV4cCI6MjA5Njg5MTQzMn0.cq8SAZU2vOl3VMdgML4LlpSKCCH-AFrYSjW64MHipnk';
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
-const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', PORTFOLIO_PREFIX='__portfolio__:';
+const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', PORTFOLIO_PREFIX='__portfolio__:';
 let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
@@ -533,7 +533,7 @@ async function fetchSupabaseData(){
   const streaks=results[4].status==='fulfilled'?results[4].value||[]:Object.entries(fallback.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null}));
   const chat=results[5].status==='fulfilled'?results[5].value||[]:fallback.chatMessages||[];
   const hidden=results[6].status==='fulfilled'?results[6].value||[]:[];
-  const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];data.classes={};data.studentPrograms={};
+  const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];data.classes={};data.studentPrograms={};data.classTasks={};
   const deletedUsers=new Set();
   daily.forEach(t=>{if((t.task_date||'').startsWith(DELETED_USER_PREFIX))deletedUsers.add(decodeDeletedUsername(t.task_date));});
   data.deletedUsers=Array.from(deletedUsers);
@@ -544,6 +544,7 @@ async function fetchSupabaseData(){
     if(key.startsWith(DELETED_USER_PREFIX))return;
     if(key===META_CLASSES_KEY){data.classes=parseMetaJSON(t.homework,{});return;}
     if(key===META_PROGRAMS_KEY){data.studentPrograms=parseMetaJSON(t.homework,{});return;}
+    if(key===META_CLASS_TASKS_KEY){data.classTasks=parseMetaJSON(t.homework,{});return;}
     data.dailyTasks[key]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};
   });
   student.forEach(t=>{if(!data.studentTasks[t.username])data.studentTasks[t.username]={};data.studentTasks[t.username][t.task_date]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};});
@@ -554,7 +555,7 @@ async function fetchSupabaseData(){
   return normalizeData(data);
 }
 
-function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{}};}
+function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{},classTasks:{}};}
 
 function parseMetaJSON(text,fallback){
   try{const v=JSON.parse(text||'');return v&&typeof v==='object'?v:fallback;}catch(e){return fallback;}
@@ -572,6 +573,7 @@ function normalizeData(data){
   data.deletedUsers=data.deletedUsers||[];
   data.classes=data.classes||{};
   data.studentPrograms=data.studentPrograms||{};
+  data.classTasks=data.classTasks||{};
   if(!data.users['toni']&&data.users['Antonio']){data.users['toni']=data.users['Antonio'];delete data.users['Antonio'];}
   const validStudents=new Set(Object.entries(data.users).filter(([,u])=>u.role==='student').map(([name])=>name));
   Object.keys(data.studentPrograms).forEach(name=>{if(!validStudents.has(name))delete data.studentPrograms[name];});
@@ -584,6 +586,7 @@ function normalizeData(data){
     data.classes[cls]=Array.from(new Set(data.classes[cls].filter(name=>validStudents.has(name))));
     if(data.classes[cls].length===0)delete data.classes[cls];
   });
+  Object.keys(data.classTasks).forEach(cls=>{if(!data.classes[cls])delete data.classTasks[cls];});
   return data;
 }
 
@@ -755,6 +758,7 @@ async function supabaseSaveTasks(data){
   const dailyRows=Object.entries(data.dailyTasks||{}).map(([date,t])=>taskRow(date,t));
   dailyRows.push(metaTaskRow(META_CLASSES_KEY,data.classes||{}));
   dailyRows.push(metaTaskRow(META_PROGRAMS_KEY,data.studentPrograms||{}));
+  dailyRows.push(metaTaskRow(META_CLASS_TASKS_KEY,data.classTasks||{}));
   const studentRows=[];
   Object.entries(data.studentTasks||{}).forEach(([username,dates])=>Object.entries(dates||{}).forEach(([date,t])=>studentRows.push(studentTaskRow(username,date,t))));
   await supabaseUpsert('daily_tasks',dailyRows,'task_date');
@@ -790,6 +794,9 @@ function getTaskForStudent(student,date,cat,program){
   const key=taskStorageDate(date,program||'italian');
   const st=appData.studentTasks||{};
   if(st[student]&&st[student][key]&&st[student][key][cat])return st[student][key][cat];
+  const cls=getStudentClass(student);
+  const ct=appData.classTasks||{};
+  if(cls&&ct[cls]&&ct[cls][key]&&ct[cls][key][cat])return ct[cls][key][cat];
   const dt=appData.dailyTasks||{};
   if(dt[key]&&dt[key][cat])return dt[key][cat];
   return '';
@@ -1002,12 +1009,14 @@ async function renameClass(oldName){
   if(!appData.classes)appData.classes={};
   appData.classes[newName]=appData.classes[oldName]||[];
   delete appData.classes[oldName];
+  if(appData.classTasks&&appData.classTasks[oldName]){appData.classTasks[newName]=appData.classTasks[oldName];delete appData.classTasks[oldName];}
   await saveClassData('rename '+oldName+' '+newName);
 }
 
 async function deleteClass(name){
   if(!confirm(_('classDelete')+' "'+name+'"?'))return;
   if(appData.classes)delete appData.classes[name];
+  if(appData.classTasks)delete appData.classTasks[name];
   await saveClassData('delete '+name);
 }
 
@@ -1088,8 +1097,8 @@ function renderTeacherTasks(main){
   let tasks={};
   if(teacherTaskStudent==='__default__'){tasks=appData.dailyTasks[storageDate]||{};}
   else if(teacherTaskStudent.startsWith('class:')){
-    const members=getClassMembers(teacherTaskStudent.slice(6));
-    tasks=members[0]&&((appData.studentTasks||{})[members[0]]||{})[storageDate]||{};
+    const cls=teacherTaskStudent.slice(6);
+    tasks=((appData.classTasks||{})[cls]||{})[storageDate]||{};
   }else{const name=teacherTaskStudent.replace(/^student:/,'');tasks=((appData.studentTasks||{})[name]||{})[storageDate]||{};}
   const classNames=Object.keys(appData.classes||{}).sort((a,b)=>a.localeCompare(b));
   const targetOptions=`<option value="__default__" ${teacherTaskStudent==='__default__'?'selected':''}>${_('taskDefaultOption')}</option>`+
@@ -1115,8 +1124,8 @@ function loadTaskForDate(){
   let tasks={};
   if(teacherTaskStudent==='__default__'){tasks=appData.dailyTasks[storageDate]||{};}
   else if(teacherTaskStudent.startsWith('class:')){
-    const members=getClassMembers(teacherTaskStudent.slice(6));
-    tasks=members[0]&&((appData.studentTasks||{})[members[0]]||{})[storageDate]||{};
+    const cls=teacherTaskStudent.slice(6);
+    tasks=((appData.classTasks||{})[cls]||{})[storageDate]||{};
   }else{const name=teacherTaskStudent.replace(/^student:/,'');tasks=((appData.studentTasks||{})[name]||{})[storageDate]||{};}
   document.getElementById('editHomework').value=tasks.homework||'';
   document.getElementById('editDictation').value=tasks.dictation||'';
@@ -1129,9 +1138,11 @@ async function saveTeacherTasks(){
   const tasks={homework:document.getElementById('editHomework').value.trim(),dictation:document.getElementById('editDictation').value.trim(),recite:document.getElementById('editRecite').value.trim(),speaking:''};
   if(teacherTaskStudent==='__default__'){if(!appData.dailyTasks[storageDate])appData.dailyTasks[storageDate]={};Object.assign(appData.dailyTasks[storageDate],tasks);}
   else if(teacherTaskStudent.startsWith('class:')){
-    const members=getClassMembers(teacherTaskStudent.slice(6));
-    if(!appData.studentTasks)appData.studentTasks={};
-    members.forEach(name=>{if(!appData.studentTasks[name])appData.studentTasks[name]={};if(!appData.studentTasks[name][storageDate])appData.studentTasks[name][storageDate]={};Object.assign(appData.studentTasks[name][storageDate],tasks);});
+    const cls=teacherTaskStudent.slice(6);
+    if(!appData.classTasks)appData.classTasks={};
+    if(!appData.classTasks[cls])appData.classTasks[cls]={};
+    if(!appData.classTasks[cls][storageDate])appData.classTasks[cls][storageDate]={};
+    Object.assign(appData.classTasks[cls][storageDate],tasks);
   }else{
     const name=teacherTaskStudent.replace(/^student:/,'');
     if(!appData.studentTasks)appData.studentTasks={};if(!appData.studentTasks[name])appData.studentTasks[name]={};if(!appData.studentTasks[name][storageDate])appData.studentTasks[name][storageDate]={};Object.assign(appData.studentTasks[name][storageDate],tasks);
