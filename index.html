@@ -502,7 +502,7 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
 const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', PORTFOLIO_PREFIX='__portfolio__:';
-let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -810,11 +810,12 @@ function getStudentPrograms(name){
 function hasProgram(name,program){return !!getStudentPrograms(name)[program];}
 function getClassMembers(className){return ((appData.classes||{})[className]||[]).filter(name=>appData.users[name]&&appData.users[name].role==='student');}
 function getClassMembersByProgram(className,program){return getClassMembers(className).filter(name=>hasProgram(name,program));}
+function sortNamesByPinyin(names){return names.slice().sort((a,b)=>a.localeCompare(b,'zh-Hans-CN',{sensitivity:'base',numeric:true}));}
 function getStudentClass(name){
   return Object.entries(appData.classes||{}).find(([,members])=>(members||[]).includes(name))?.[0]||'';
 }
 function getUnclassedStudents(){
-  return Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([n])=>n).filter(n=>!getStudentClass(n));
+  return sortNamesByPinyin(Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([n])=>n).filter(n=>!getStudentClass(n)));
 }
 function getTaskKeys(){return ['homework','dictation','recite'];}
 function getTaskConfigs(){return [
@@ -938,7 +939,7 @@ async function switchTeacherTab(tab){
 
 function renderTeacherStudents(main){
   normalizeData(appData);
-  const students=Object.entries(appData.users).filter(([,v])=>v.role==='student');
+  const students=sortNamesByPinyin(Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([name])=>name)).map(name=>[name,appData.users[name]]);
   const today=getToday();
   const classNames=Object.keys(appData.classes||{}).sort((a,b)=>a.localeCompare(b));
   const classOptions=classNames.map(c=>`<option value="${c}">${c}</option>`).join('');
@@ -956,14 +957,14 @@ function renderTeacherStudents(main){
     const ad=dc===getTaskKeys().length;
     const p=getStudentPrograms(name);
     const tags=`<div class="student-program-tags">${p.italian?`<span class="program-tag">${_('programItalian')}</span>`:''}${p.portfolio?`<span class="program-tag">${_('programPortfolio')}</span>`:''}</div>`;
-    return`<div class="student-card" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}${tags}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>`;
+    return`<div class="student-card" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}${tags}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>${expandedStudentCheckin===name?renderStudentCheckinDetail(name):''}`;
   };
   let listHTML='';
   if(students.length===0){
     listHTML='<div class="empty-state"><div class="icon">📭</div>'+_('noStudents')+'</div>';
   }else{
     listHTML=classNames.map(cls=>{
-      const members=getClassMembers(cls);
+      const members=sortNamesByPinyin(getClassMembers(cls));
       const body=members.length?members.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>';
       return`<div class="submenu-toggle" onclick="toggleSubmenu(this,'class_${encodeURIComponent(cls)}')"><span>🏫 ${cls} (${members.length})</span><span class="arrow">▶</span></div>
       <div class="submenu-body" id="class_${encodeURIComponent(cls)}">
@@ -974,7 +975,7 @@ function renderTeacherStudents(main){
     const unclassed=getUnclassedStudents();
     listHTML+=`<div class="submenu-toggle open" onclick="toggleSubmenu(this,'unclassedStudents')"><span>👤 ${_('classUnassigned')} (${unclassed.length})</span><span class="arrow">▶</span></div><div class="submenu-body show" id="unclassedStudents">${unclassed.length?unclassed.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>'}</div>`;
   }
-  main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+classTools+listHTML+'<div id="checkinDetailArea"></div>';
+  main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+classTools+listHTML;
 }
 
 async function saveClassData(message){
@@ -1038,14 +1039,18 @@ async function refreshTeacherStudents(){
 }
 
 function showStudentCheckin(name){
-  const area=document.getElementById('checkinDetailArea');
+  expandedStudentCheckin=expandedStudentCheckin===name?'':name;
+  renderTeacherStudents(document.getElementById('teacherMain'));
+}
+
+function renderStudentCheckinDetail(name){
   const today=getToday();
   if(!appData.checkins[name])appData.checkins[name]={};
   if(!appData.checkins[name][today])appData.checkins[name][today]=getEmptyCheckin();
   const ci=appData.checkins[name][today];
   const cfgs=getTaskConfigs();
   const dc=cfgs.filter(c=>ci[c.key]).length;
-  area.innerHTML=`<div style="background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.08);margin-bottom:10px">
+  return `<div style="background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.08);margin:-4px 0 12px 0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <b style="font-size:16px">👤 ${name} · ${_('checkinDetail')}</b>
       <span style="font-size:13px;color:#888">${dc}/${cfgs.length}</span>
@@ -1055,7 +1060,7 @@ function showStudentCheckin(name){
       <span class="ci-status">${ci[c.key]?'✅ '+_('checkinDone'):'⏳ '+_('checkinPending')}</span>
       <button class="check-btn ${ci[c.key]?'done':''}" onclick="teacherToggleCheckin('${name}','${c.key}')">${ci[c.key]?'✅':'○'}</button>
     </div>`).join('')}
-    <button class="btn-sm outline" style="margin-top:12px;width:100%" onclick="document.getElementById('checkinDetailArea').innerHTML='';renderTeacherStudents(document.getElementById('teacherMain'))">${_('checkinCollapse')}</button>
+    <button class="btn-sm outline" style="margin-top:12px;width:100%" onclick="expandedStudentCheckin='';renderTeacherStudents(document.getElementById('teacherMain'))">${_('checkinCollapse')}</button>
   </div>`;
 }
 
@@ -1076,7 +1081,8 @@ async function teacherToggleCheckin(name,key){
   }
   hideLoading();
   if(allDone){setTimeout(()=>spawnConfetti(),100);setTimeout(()=>showToast(_('allDone')),800);}
-  showStudentCheckin(name);
+  expandedStudentCheckin=name;
+  renderTeacherStudents(document.getElementById('teacherMain'));
 }
 
 function updateStudentProgress(name){
@@ -1100,7 +1106,7 @@ function updateStudentProgress(name){
 
 // ===== TEACHER: Tasks =====
 function renderTeacherTasks(main){
-  const students=Object.entries(appData.users).filter(([n,v])=>v.role==='student'&&hasProgram(n,teacherTaskProgram)).map(([n])=>n);
+  const students=sortNamesByPinyin(Object.entries(appData.users).filter(([n,v])=>v.role==='student'&&hasProgram(n,teacherTaskProgram)).map(([n])=>n));
   if(teacherTaskStudent.startsWith('student:')&&!students.includes(teacherTaskStudent.slice(8)))teacherTaskStudent='__default__';
   const classNames=Object.keys(appData.classes||{}).filter(c=>getClassMembersByProgram(c,teacherTaskProgram).length>0).sort((a,b)=>a.localeCompare(b));
   if(teacherTaskStudent.startsWith('class:')&&!classNames.includes(teacherTaskStudent.slice(6)))teacherTaskStudent='__default__';
@@ -1180,10 +1186,7 @@ function renderTeacherSettings(main){
       return`<div class="submenu-toggle" onclick="toggleSubmenu(this,'studentSet_${encodeURIComponent(name)}')"><span><b>${name}</b> <span class="role-tag student">${_('settingsStudent')}</span></span><span class="arrow">▶</span></div>
       <div class="submenu-body" id="studentSet_${encodeURIComponent(name)}">
         <div class="settings-card"><h4>${_('programTitle')}</h4>
-          <div class="program-checks">
-            <label><input type="checkbox" id="prog_it_${encodeURIComponent(name)}" ${p.italian?'checked':''}>${_('programItalian')}</label>
-            <label><input type="checkbox" id="prog_pf_${encodeURIComponent(name)}" ${p.portfolio?'checked':''}>${_('programPortfolio')}</label>
-          </div>
+          <div class="program-switch" id="programSwitch_${encodeURIComponent(name)}">${renderStudentProgramButtons(name)}</div>
           <button type="button" class="btn-sm primary" onclick="saveStudentProgram('${name}')">${_('taskSave')}</button>
           <button type="button" class="btn-sm danger" onclick="deleteUser('${name}')">${_('settingsDelete')}</button>
         </div>
@@ -1275,9 +1278,25 @@ async function addAccount(){
   showToast(_('teacherAdded'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
+function renderStudentProgramButtons(name){
+  const p=getStudentPrograms(name);
+  return `<button type="button" class="${p.italian?'active':''}" onclick="toggleStudentProgram('${name}','italian');return false;">${_('programItalian')}</button><button type="button" class="${p.portfolio?'active':''}" onclick="toggleStudentProgram('${name}','portfolio');return false;">${_('programPortfolio')}</button>`;
+}
+
+function toggleStudentProgram(name,program){
+  if(!appData.studentPrograms)appData.studentPrograms={};
+  const p=getStudentPrograms(name);
+  p[program]=!p[program];
+  if(!p.italian&&!p.portfolio)p[program]=true;
+  appData.studentPrograms[name]=p;
+  const el=document.getElementById('programSwitch_'+encodeURIComponent(name));
+  if(el)el.innerHTML=renderStudentProgramButtons(name);
+}
+
 async function saveStudentProgram(name){
-  const it=!!(document.getElementById('prog_it_'+encodeURIComponent(name))||{}).checked;
-  const pf=!!(document.getElementById('prog_pf_'+encodeURIComponent(name))||{}).checked;
+  const p=getStudentPrograms(name);
+  const it=!!p.italian;
+  const pf=!!p.portfolio;
   if(!it&&!pf){showToast(_('errorFill'));return;}
   if(!appData.studentPrograms)appData.studentPrograms={};
   appData.studentPrograms[name]={italian:it,portfolio:pf};
