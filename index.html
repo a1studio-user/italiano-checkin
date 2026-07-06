@@ -499,7 +499,7 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
 const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', PORTFOLIO_PREFIX='__portfolio__:';
-let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -584,7 +584,6 @@ function normalizeData(data){
   Object.keys(data.classes).forEach(cls=>{
     if(!Array.isArray(data.classes[cls]))data.classes[cls]=[];
     data.classes[cls]=Array.from(new Set(data.classes[cls].filter(name=>validStudents.has(name))));
-    if(data.classes[cls].length===0)delete data.classes[cls];
   });
   Object.keys(data.classTasks).forEach(cls=>{if(!data.classes[cls])delete data.classTasks[cls];});
   return data;
@@ -807,6 +806,7 @@ function getStudentPrograms(name){
 }
 function hasProgram(name,program){return !!getStudentPrograms(name)[program];}
 function getClassMembers(className){return ((appData.classes||{})[className]||[]).filter(name=>appData.users[name]&&appData.users[name].role==='student');}
+function getClassMembersByProgram(className,program){return getClassMembers(className).filter(name=>hasProgram(name,program));}
 function getStudentClass(name){
   return Object.entries(appData.classes||{}).find(([,members])=>(members||[]).includes(name))?.[0]||'';
 }
@@ -915,6 +915,7 @@ async function switchTeacherTab(tab){
     renderTeacherStudents(main);
     teacherRefreshTimer=setInterval(async()=>{
       if(currentTeacherTab!=='students')return;
+      if(classEditInProgress)return;
       const pollEpoch=teacherViewEpoch;
       try{await fetchDataFromApi();if(currentTeacherTab!=='students'||teacherViewEpoch!==pollEpoch)return;renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}catch(e){if(currentTeacherTab==='students'&&teacherViewEpoch===pollEpoch)updateSyncStatus(false);}
     },20000);
@@ -974,9 +975,13 @@ function renderTeacherStudents(main){
 }
 
 async function saveClassData(message){
-  normalizeData(appData);saveLocalData();showLoading(_('syncing'));
+  normalizeData(appData);saveLocalData();
+  if(currentTeacherTab==='students')renderTeacherStudents(document.getElementById('teacherMain'));
+  classEditInProgress=true;
+  showLoading(_('syncing'));
   try{await saveData('班级:'+message);updateSyncStatus(true);showToast(_('classUpdated'));}
   catch(e){updateSyncStatus(false);showToast(_('syncFail'));}
+  classEditInProgress=false;
   hideLoading();
   if(currentTeacherTab==='students')renderTeacherStudents(document.getElementById('teacherMain'));
 }
@@ -1091,7 +1096,10 @@ function updateStudentProgress(name){
 
 // ===== TEACHER: Tasks =====
 function renderTeacherTasks(main){
-  const students=Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([n])=>n);
+  const students=Object.entries(appData.users).filter(([n,v])=>v.role==='student'&&hasProgram(n,teacherTaskProgram)).map(([n])=>n);
+  if(teacherTaskStudent.startsWith('student:')&&!students.includes(teacherTaskStudent.slice(8)))teacherTaskStudent='__default__';
+  const classNames=Object.keys(appData.classes||{}).filter(c=>getClassMembersByProgram(c,teacherTaskProgram).length>0).sort((a,b)=>a.localeCompare(b));
+  if(teacherTaskStudent.startsWith('class:')&&!classNames.includes(teacherTaskStudent.slice(6)))teacherTaskStudent='__default__';
   const today=getToday();
   const storageDate=taskStorageDate(today,teacherTaskProgram);
   let tasks={};
@@ -1100,7 +1108,6 @@ function renderTeacherTasks(main){
     const cls=teacherTaskStudent.slice(6);
     tasks=((appData.classTasks||{})[cls]||{})[storageDate]||{};
   }else{const name=teacherTaskStudent.replace(/^student:/,'');tasks=((appData.studentTasks||{})[name]||{})[storageDate]||{};}
-  const classNames=Object.keys(appData.classes||{}).sort((a,b)=>a.localeCompare(b));
   const targetOptions=`<option value="__default__" ${teacherTaskStudent==='__default__'?'selected':''}>${_('taskDefaultOption')}</option>`+
     classNames.map(c=>`<option value="class:${c}" ${teacherTaskStudent==='class:'+c?'selected':''}>${_('taskClassOption')}${c}</option>`).join('')+
     students.map(s=>`<option value="student:${s}" ${teacherTaskStudent==='student:'+s||teacherTaskStudent===s?'selected':''}>👤 ${s}</option>`).join('');
@@ -1182,7 +1189,7 @@ function renderTeacherSettings(main){
   }).join(''):`<div class="empty-state" style="padding:16px">--</div>`;
   let ts=`<div class="settings-card"><h4>${_('settingsToken')}</h4><div style="display:flex;align-items:center;gap:10px"><span style="color:#009246;font-weight:600;">${_('settingsTokenOk')}</span><button class="btn-sm outline" onclick="refreshCloudData()">${_('settingsTokenChange')}</button></div><div class="hint">${_('settingsTokenHint')}</div></div>`;
   const canAddTeacher=currentUser&&currentUser.username==='toni';
-  const addAccountCard=`<div class="settings-card"><h4>${canAddTeacher?_('settingsAddTeacher'):_('settingsAddStudent')}</h4>${canAddTeacher?`<select id="newAccountRole" style="margin-bottom:10px"><option value="student">${_('settingsStudent')}</option><option value="teacher">${_('settingsTeacher')}</option></select>`:`<input type="hidden" id="newAccountRole" value="student">`}<div class="program-checks"><label><input type="checkbox" id="newProgItalian" checked>${_('programItalian')}</label><label><input type="checkbox" id="newProgPortfolio">${_('programPortfolio')}</label></div><div class="row"><input type="text" id="newAccountUser" placeholder="${_('settingsTeacherUser')}" style="flex:1" autocapitalize="none"><input type="password" id="newAccountPass" placeholder="${_('settingsTeacherPass')}" style="flex:1"><button type="button" class="btn-sm primary" onclick="addAccount()">${_('settingsAdd')}</button></div></div>`;
+  const addAccountCard=`<div class="settings-card"><h4>${canAddTeacher?_('settingsAddTeacher'):_('settingsAddStudent')}</h4>${canAddTeacher?`<select id="newAccountRole" style="margin-bottom:10px"><option value="student">${_('settingsStudent')}</option><option value="teacher">${_('settingsTeacher')}</option></select>`:`<input type="hidden" id="newAccountRole" value="student">`}<div class="program-switch" id="newProgramSwitch">${renderNewAccountProgramButtons()}</div><div class="row"><input type="text" id="newAccountUser" placeholder="${_('settingsTeacherUser')}" style="flex:1" autocapitalize="none"><input type="password" id="newAccountPass" placeholder="${_('settingsTeacherPass')}" style="flex:1"><button type="button" class="btn-sm primary" onclick="addAccount()">${_('settingsAdd')}</button></div></div>`;
 
   main.innerHTML=ts+`
     <div class="settings-card"><h4>${_('settingsLanguage')}</h4>
@@ -1229,6 +1236,17 @@ async function refreshCloudData(){
 
 function clearToken(){refreshCloudData();}
 
+function renderNewAccountProgramButtons(){
+  return `<button type="button" class="${newAccountPrograms.italian?'active':''}" onclick="toggleNewAccountProgram('italian');return false;">${_('programItalian')}</button><button type="button" class="${newAccountPrograms.portfolio?'active':''}" onclick="toggleNewAccountProgram('portfolio');return false;">${_('programPortfolio')}</button>`;
+}
+
+function toggleNewAccountProgram(program){
+  newAccountPrograms[program]=!newAccountPrograms[program];
+  if(!newAccountPrograms.italian&&!newAccountPrograms.portfolio)newAccountPrograms[program]=true;
+  const el=document.getElementById('newProgramSwitch');
+  if(el)el.innerHTML=renderNewAccountProgramButtons();
+}
+
 async function addAccount(){
   const viewEpoch=teacherViewEpoch;
   const u=document.getElementById('newAccountUser').value.trim(),p=document.getElementById('newAccountPass').value;
@@ -1241,14 +1259,15 @@ async function addAccount(){
   const before=cloneData(appData);
   appData.users[u]={password:p,role};
   if(role==='student'){
-    const italian=(document.getElementById('newProgItalian')||{}).checked!==false;
-    const portfolio=!!((document.getElementById('newProgPortfolio')||{}).checked);
+    const italian=!!newAccountPrograms.italian;
+    const portfolio=!!newAccountPrograms.portfolio;
     appData.studentPrograms[u]={italian:italian||!portfolio,portfolio};
   }
   showLoading(_('syncing'));
   try{await supabaseCreateNewUser(u,p,role);await supabaseSaveTasks(appData);saveLocalData();updateSyncStatus(true);}
   catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(e&&e.message==='用户已删除'?_('errorDeletedUser'):e&&e.message==='用户已存在'?_('errorUserExists'):_('syncFail'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));return;}
   hideLoading();
+  newAccountPrograms={italian:true,portfolio:false};
   showToast(_('teacherAdded'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
@@ -1327,15 +1346,21 @@ function renderStudentTasks(main){
   const today=getToday();
   const cfgs=getTaskConfigs();
   const programs=getStudentPrograms(currentUser.username);
+  if(!programs[studentTaskProgram])studentTaskProgram=programs.portfolio&&!programs.italian?'portfolio':'italian';
   const renderSection=(program,title)=>{
     const cards=cfgs.map(c=>({c,content:getTaskForStudent(currentUser.username,today,c.key,program)})).filter(x=>x.content).map(({c,content})=>`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content" lang="it">${content}</div></div></div>`).join('');
     return `${title?`<div class="section-title">${title}</div>`:''}${cards}`;
   };
-  const onlyPortfolio=!programs.italian&&programs.portfolio;
-  let html=`<div class="section-title">${onlyPortfolio?_('taskPortfolioTitle'):'📅 '+formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`;
-  if(programs.italian)html+=renderSection('italian',_('taskItalian'));
-  if(programs.portfolio)html+=onlyPortfolio?renderSection('portfolio',''):renderSection('portfolio',_('taskPortfolioTitle'));
+  const both=programs.italian&&programs.portfolio;
+  let html=`<div class="section-title">${studentTaskProgram==='portfolio'?_('taskPortfolioTitle'):'📅 '+formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`;
+  if(both)html+=`<div class="program-switch"><button type="button" class="${studentTaskProgram==='italian'?'active':''}" onclick="changeStudentTaskProgram('italian');return false;">${_('taskItalian')}</button><button type="button" class="${studentTaskProgram==='portfolio'?'active':''}" onclick="changeStudentTaskProgram('portfolio');return false;">${_('taskPortfolio')}</button></div>`;
+  html+=renderSection(studentTaskProgram,'');
   main.innerHTML=html+`<div style="text-align:center;color:#bbb;font-size:12px;margin-top:12px">${_('taskReadonlyHint')}</div><div class="footer">${_('footer')}</div>`;
+}
+
+function changeStudentTaskProgram(program){
+  studentTaskProgram=program;
+  renderStudentTasks(document.getElementById('studentMain'));
 }
 
 async function refreshStudentTasks(){
