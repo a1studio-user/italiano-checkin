@@ -313,6 +313,7 @@ const I18N = {
     taskHomework:'📖 背课文', taskDictation:'🔤 背单词', taskRecite:'✍️ 笔头作业', taskSpeaking:'🗣️ 口语 · Conversazione',
     taskItalian:'意大利语', taskPortfolio:'作品集', taskTargetClass:'🏫 班级', taskTargetStudent:'👤 学生', taskClassOption:'🏫 班级：', taskPortfolioTitle:'作品集',
     classManage:'🏫 班级管理', className:'班级名称', classCreate:'新建班级', classAddStudent:'加入班级', classRename:'改名', classDelete:'删除班级', classRemoveStudent:'移出', classUnassigned:'未分班学生', classCreated:'✅ 班级已保存', classUpdated:'✅ 班级已更新',
+    classChooseStudent:'请选择学生',
     programItalian:'意大利语', programPortfolio:'作品集', programTitle:'专业分类', programSaved:'✅ 专业已更新',
     settingsToken:'☁️ 云端同步', settingsTokenOk:'✅ Supabase 已启用', settingsTokenChange:'刷新',
     settingsTokenHint:'数据已迁移到 Supabase，不再使用 GitHub 作为数据库。',
@@ -362,6 +363,7 @@ const I18N = {
     taskHomework:'📖 Text Recitation', taskDictation:'🔤 Word Recitation', taskRecite:'✍️ Written Work', taskSpeaking:'🗣️ Speaking · Conversazione',
     taskItalian:'Italian', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Class', taskTargetStudent:'👤 Student', taskClassOption:'🏫 Class: ', taskPortfolioTitle:'Portfolio',
     classManage:'🏫 Class Management', className:'Class name', classCreate:'Create class', classAddStudent:'Add to class', classRename:'Rename', classDelete:'Delete class', classRemoveStudent:'Remove', classUnassigned:'Unassigned students', classCreated:'✅ Class saved', classUpdated:'✅ Class updated',
+    classChooseStudent:'Select student',
     programItalian:'Italian', programPortfolio:'Portfolio', programTitle:'Major category', programSaved:'✅ Category updated',
     settingsToken:'☁️ Cloud Sync', settingsTokenOk:'✅ Supabase enabled', settingsTokenChange:'Refresh',
     settingsTokenHint:'Data is now stored in Supabase. GitHub is no longer used as the database.',
@@ -411,6 +413,7 @@ const I18N = {
     taskHomework:'📖 Recita il testo', taskDictation:'🔤 Recita parole', taskRecite:'✍️ Compiti scritti', taskSpeaking:'🗣️ Conversazione',
     taskItalian:'Italiano', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Classe', taskTargetStudent:'👤 Studente', taskClassOption:'🏫 Classe: ', taskPortfolioTitle:'Portfolio',
     classManage:'🏫 Gestione classi', className:'Nome classe', classCreate:'Crea classe', classAddStudent:'Aggiungi alla classe', classRename:'Rinomina', classDelete:'Elimina classe', classRemoveStudent:'Rimuovi', classUnassigned:'Studenti senza classe', classCreated:'✅ Classe salvata', classUpdated:'✅ Classe aggiornata',
+    classChooseStudent:'Seleziona studente',
     programItalian:'Italiano', programPortfolio:'Portfolio', programTitle:'Categoria', programSaved:'✅ Categoria aggiornata',
     settingsToken:'☁️ Sincronizzazione cloud', settingsTokenOk:'✅ Supabase attivo', settingsTokenChange:'Aggiorna',
     settingsTokenHint:'I dati ora sono salvati in Supabase. GitHub non è più usato come database.',
@@ -943,7 +946,7 @@ function renderTeacherStudents(main){
   const classTools=`<div class="class-tools">
     <h4 style="font-size:14px;margin-bottom:10px">${_('classManage')}</h4>
     <div class="row"><input type="text" id="newClassName" placeholder="${_('className')}"><button type="button" class="btn-sm primary" onclick="createClass()">${_('classCreate')}</button></div>
-    <div class="row"><select id="classStudentSelect">${studentOptions}</select><select id="classSelect"><option value="__none__">${_('classUnassigned')}</option>${classOptions}</select><button type="button" class="btn-sm primary" onclick="assignStudentToClass()">${_('classAddStudent')}</button></div>
+    <div class="row"><select id="classStudentSelect"><option value="">${_('classChooseStudent')}</option>${studentOptions}</select><select id="classSelect"><option value="__none__">${_('classUnassigned')}</option>${classOptions}</select><button type="button" class="btn-sm primary" onclick="assignStudentToClass()">${_('classAddStudent')}</button></div>
     <div class="hint">${_('taskDefaultHint')}</div>
   </div>`;
   const renderStudentCard=name=>{
@@ -1003,7 +1006,8 @@ async function assignStudentToClass(){
   Object.keys(appData.classes||{}).forEach(c=>{appData.classes[c]=(appData.classes[c]||[]).filter(n=>n!==student);});
   if(cls==='__none__'){await saveClassData('unassign '+student);return;}
   if(!appData.classes[cls])appData.classes[cls]=[];
-  appData.classes[cls].push(student);
+  if(!appData.classes[cls].includes(student))appData.classes[cls].push(student);
+  normalizeData(appData);
   await saveClassData('assign '+student+' '+cls);
 }
 
