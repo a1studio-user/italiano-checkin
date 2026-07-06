@@ -13,7 +13,7 @@
 <link rel="manifest" href="/italiano-checkin/manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/italiano-checkin/icon-192.png">
 <link rel="apple-touch-icon" href="/italiano-checkin/icon-192.png">
-<title>🇮🇹 意大利语暑期打卡</title>
+<title>A1 STUDIO暑期打卡</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helvetica Neue',sans-serif;background:linear-gradient(135deg,#f0f4f0,#e8f0e3 50%,#f5f0e8);min-height:100vh;min-height:-webkit-fill-available;color:#2c3e2d;padding-bottom:80px;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
@@ -126,6 +126,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helv
 .task-editor .row input[type=date]{flex:1;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:14px;outline:none;-webkit-appearance:none;min-height:44px}
 .task-editor .row input[type=date]:focus{border-color:#009246}
 .task-editor .cat-label{font-size:13px;font-weight:700;color:#333;margin:8px 0 4px;display:flex;align-items:center;gap:6px}
+.program-switch{display:flex;gap:8px;margin-bottom:10px}
+.program-switch button{flex:1;padding:10px;border:2px solid #e8e8e8;background:#fff;border-radius:10px;font-size:13px;font-weight:700;color:#777}
+.program-switch button.active{border-color:#009246;color:#009246;background:#f0faf3}
+.program-checks{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 12px;font-size:12px;color:#555}
+.program-checks label{display:flex;align-items:center;gap:5px;margin:0}
+.program-checks input{width:auto;margin:0}
+.class-tools{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:14px}
+.class-tools .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.class-tools input,.class-tools select{flex:1;padding:10px 12px;border:2px solid #e8e8e8;border-radius:10px;font-size:14px;background:#fff}
+.class-tools .hint{font-size:11px;color:#999;line-height:1.5}
+.student-program-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.program-tag{display:inline-block;padding:2px 7px;border-radius:10px;background:#eef7f1;color:#009246;font-size:10px;font-weight:700}
 .btn-sm{padding:10px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;-webkit-appearance:none;min-height:40px}
 .btn-sm:active{transform:scale(.95)}
 .btn-sm.primary{background:#009246;color:#fff}
@@ -279,7 +291,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helv
 // ===== i18n =====
 const I18N = {
   'zh-CN': {
-    loginTitle:'Il Mio Diario Estivo', loginSub:'意大利语暑期打卡', loginUserLabel:'用户名', loginPassLabel:'密码',
+    loginTitle:'A1 STUDIO暑期打卡', loginSub:'暑期学习打卡', loginUserLabel:'用户名', loginPassLabel:'密码',
     loginBtn:'登 录', switchToRegister1:'还没有账号？', switchToRegisterLink:'注册学生账号',
     regTitle:'注册学生账号', regSub:'仅限学生注册', regUserLabel:'用户名', regPassLabel:'密码', regPass2Label:'确认密码',
     regBtn:'注 册', switchToLogin1:'已有账号？', switchToLoginLink:'返回登录',
@@ -287,7 +299,7 @@ const I18N = {
     errorReserved:'该用户名为教师保留', errorUserExists:'用户名已存在', errorNotFound:'用户不存在',
     errorWrongPass:'密码错误', errorNetwork:'网络错误，请重试', errorDeletedUser:'该用户名已被删除，请换一个用户名',
     regSuccess:'✅ 注册成功！请登录', regSuccessNoSync:'✅ 注册成功！（教师端配置Token后可同步）',
-    teacherHeader:'👨‍🏫 教师端', studentHeader:'🇮🇹 Il Mio Diario Estivo',
+    teacherHeader:'👨‍🏫 教师端', studentHeader:'A1 STUDIO暑期打卡',
     tnav_students:'学生', tnav_tasks:'作业', tnav_podium:'排行榜', tnav_chat:'聊天', tnav_settings:'设置',
     snav_tasks:'作业', snav_podium:'排行榜', snav_chat:'聊天', snav_settings:'设置',
     installBanner:'添加到主屏幕，像 App 一样使用', installBtn:'安装',
@@ -299,6 +311,9 @@ const I18N = {
     taskDefaultHint:'💡 默认作业适用于所有学生。选择具体学生可为其单独定制，未定制则使用默认。',
     taskDefaultOption:'📋 默认（所有学生）', taskSave:'💾 保存', taskSaved:'作业已保存', taskSyncSaved:'并同步',
     taskHomework:'📖 背课文', taskDictation:'🔤 背单词', taskRecite:'✍️ 笔头作业', taskSpeaking:'🗣️ 口语 · Conversazione',
+    taskItalian:'意大利语', taskPortfolio:'作品集', taskTargetClass:'🏫 班级', taskTargetStudent:'👤 学生', taskClassOption:'🏫 班级：', taskPortfolioTitle:'作品集',
+    classManage:'🏫 班级管理', className:'班级名称', classCreate:'新建班级', classAddStudent:'加入班级', classRename:'改名', classDelete:'删除班级', classRemoveStudent:'移出', classUnassigned:'未分班学生', classCreated:'✅ 班级已保存', classUpdated:'✅ 班级已更新',
+    programItalian:'意大利语', programPortfolio:'作品集', programTitle:'专业分类', programSaved:'✅ 专业已更新',
     settingsToken:'☁️ 云端同步', settingsTokenOk:'✅ Supabase 已启用', settingsTokenChange:'刷新',
     settingsTokenHint:'数据已迁移到 Supabase，不再使用 GitHub 作为数据库。',
     settingsTokenWarn:'⚠️ 请配置 GitHub Token', settingsTokenWarnHint1:'数据同步需要 GitHub Personal Access Token。',
@@ -325,7 +340,7 @@ const I18N = {
     checkinSaved:'打卡已更新'
   },
   'en': {
-    loginTitle:'Il Mio Diario Estivo', loginSub:'Italian Summer Check-in', loginUserLabel:'Username', loginPassLabel:'Password',
+    loginTitle:'A1 STUDIO Summer Check-in', loginSub:'Summer learning check-in', loginUserLabel:'Username', loginPassLabel:'Password',
     loginBtn:'Login', switchToRegister1:'No account? ', switchToRegisterLink:'Register',
     regTitle:'Student Registration', regSub:'Students only', regUserLabel:'Username', regPassLabel:'Password', regPass2Label:'Confirm Password',
     regBtn:'Register', switchToLogin1:'Already have an account? ', switchToLoginLink:'Back to Login',
@@ -333,7 +348,7 @@ const I18N = {
     errorReserved:'This username is reserved for teachers', errorUserExists:'Username already exists', errorNotFound:'User not found',
     errorWrongPass:'Wrong password', errorNetwork:'Network error, please retry', errorDeletedUser:'This username was deleted. Please choose another one',
     regSuccess:'✅ Registered! Please login', regSuccessNoSync:'✅ Registered! (Sync after teacher configures Token)',
-    teacherHeader:'👨‍🏫 Teacher', studentHeader:'🇮🇹 Il Mio Diario Estivo',
+    teacherHeader:'👨‍🏫 Teacher', studentHeader:'A1 STUDIO Summer Check-in',
     tnav_students:'Students', tnav_tasks:'Tasks', tnav_podium:'Podium', tnav_chat:'Chat', tnav_settings:'Settings',
     snav_tasks:'Tasks', snav_podium:'Podium', snav_chat:'Chat', snav_settings:'Settings',
     installBanner:'Add to Home Screen', installBtn:'Install',
@@ -345,6 +360,9 @@ const I18N = {
     taskDefaultHint:'💡 Default tasks apply to all students. Select a student to customize individually.',
     taskDefaultOption:'📋 Default (All Students)', taskSave:'💾 Save', taskSaved:'Tasks saved', taskSyncSaved:'and synced',
     taskHomework:'📖 Text Recitation', taskDictation:'🔤 Word Recitation', taskRecite:'✍️ Written Work', taskSpeaking:'🗣️ Speaking · Conversazione',
+    taskItalian:'Italian', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Class', taskTargetStudent:'👤 Student', taskClassOption:'🏫 Class: ', taskPortfolioTitle:'Portfolio',
+    classManage:'🏫 Class Management', className:'Class name', classCreate:'Create class', classAddStudent:'Add to class', classRename:'Rename', classDelete:'Delete class', classRemoveStudent:'Remove', classUnassigned:'Unassigned students', classCreated:'✅ Class saved', classUpdated:'✅ Class updated',
+    programItalian:'Italian', programPortfolio:'Portfolio', programTitle:'Major category', programSaved:'✅ Category updated',
     settingsToken:'☁️ Cloud Sync', settingsTokenOk:'✅ Supabase enabled', settingsTokenChange:'Refresh',
     settingsTokenHint:'Data is now stored in Supabase. GitHub is no longer used as the database.',
     settingsTokenWarn:'⚠️ Configure GitHub Token', settingsTokenWarnHint1:'Data sync requires a GitHub Personal Access Token.',
@@ -371,7 +389,7 @@ const I18N = {
     checkinSaved:'Check-in updated'
   },
   'it': {
-    loginTitle:'Il Mio Diario Estivo', loginSub:'Check-in estivo d\'italiano', loginUserLabel:'Nome utente', loginPassLabel:'Password',
+    loginTitle:'A1 STUDIO Check-in Estivo', loginSub:'Check-in studio estivo', loginUserLabel:'Nome utente', loginPassLabel:'Password',
     loginBtn:'Accedi', switchToRegister1:'Non hai un account? ', switchToRegisterLink:'Registrati',
     regTitle:'Registrazione studente', regSub:'Solo per studenti', regUserLabel:'Nome utente', regPassLabel:'Password', regPass2Label:'Conferma password',
     regBtn:'Registrati', switchToLogin1:'Hai già un account? ', switchToLoginLink:'Torna al login',
@@ -379,7 +397,7 @@ const I18N = {
     errorReserved:'Nome utente riservato agli insegnanti', errorUserExists:'Nome utente già esistente', errorNotFound:'Utente non trovato',
     errorWrongPass:'Password errata', errorNetwork:'Errore di rete, riprova', errorDeletedUser:'Questo nome utente è stato eliminato. Scegline un altro',
     regSuccess:'✅ Registrato! Accedi', regSuccessNoSync:'✅ Registrato! (Sincronizza dopo che l\'insegnante configura il Token)',
-    teacherHeader:'👨‍🏫 Insegnante', studentHeader:'🇮🇹 Il Mio Diario Estivo',
+    teacherHeader:'👨‍🏫 Insegnante', studentHeader:'A1 STUDIO Check-in Estivo',
     tnav_students:'Studenti', tnav_tasks:'Compiti', tnav_podium:'Podio', tnav_chat:'Chat', tnav_settings:'Impostazioni',
     snav_tasks:'Compiti', snav_podium:'Podio', snav_chat:'Chat', snav_settings:'Impostazioni',
     installBanner:'Aggiungi alla schermata Home', installBtn:'Installa',
@@ -391,6 +409,9 @@ const I18N = {
     taskDefaultHint:'💡 I compiti predefiniti valgono per tutti. Seleziona uno studente per personalizzarli.',
     taskDefaultOption:'📋 Predefinito (tutti)', taskSave:'💾 Salva', taskSaved:'Compiti salvati', taskSyncSaved:'e sincronizzati',
     taskHomework:'📖 Recita il testo', taskDictation:'🔤 Recita parole', taskRecite:'✍️ Compiti scritti', taskSpeaking:'🗣️ Conversazione',
+    taskItalian:'Italiano', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Classe', taskTargetStudent:'👤 Studente', taskClassOption:'🏫 Classe: ', taskPortfolioTitle:'Portfolio',
+    classManage:'🏫 Gestione classi', className:'Nome classe', classCreate:'Crea classe', classAddStudent:'Aggiungi alla classe', classRename:'Rinomina', classDelete:'Elimina classe', classRemoveStudent:'Rimuovi', classUnassigned:'Studenti senza classe', classCreated:'✅ Classe salvata', classUpdated:'✅ Classe aggiornata',
+    programItalian:'Italiano', programPortfolio:'Portfolio', programTitle:'Categoria', programSaved:'✅ Categoria aggiornata',
     settingsToken:'☁️ Sincronizzazione cloud', settingsTokenOk:'✅ Supabase attivo', settingsTokenChange:'Aggiorna',
     settingsTokenHint:'I dati ora sono salvati in Supabase. GitHub non è più usato come database.',
     settingsTokenWarn:'⚠️ Configura GitHub Token', settingsTokenWarnHint1:'La sincronizzazione richiede un GitHub Personal Access Token.',
@@ -477,7 +498,8 @@ const SUPABASE_URL='https://imzxxbxdjwqfduwsqipz.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltenh4YnhkandxZmR1d3NxaXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTU0MzIsImV4cCI6MjA5Njg5MTQzMn0.cq8SAZU2vOl3VMdgML4LlpSKCCH-AFrYSjW64MHipnk';
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
-let appData=null, currentUser=null, teacherTaskStudent='__default__', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', PORTFOLIO_PREFIX='__portfolio__:';
+let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -511,15 +533,18 @@ async function fetchSupabaseData(){
   const streaks=results[4].status==='fulfilled'?results[4].value||[]:Object.entries(fallback.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null}));
   const chat=results[5].status==='fulfilled'?results[5].value||[]:fallback.chatMessages||[];
   const hidden=results[6].status==='fulfilled'?results[6].value||[]:[];
-  const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];
+  const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];data.classes={};data.studentPrograms={};
   const deletedUsers=new Set();
   daily.forEach(t=>{if((t.task_date||'').startsWith(DELETED_USER_PREFIX))deletedUsers.add(decodeDeletedUsername(t.task_date));});
   data.deletedUsers=Array.from(deletedUsers);
   users.forEach(u=>{if(!deletedUsers.has(u.username))data.users[u.username]={password:u.password,role:u.role};});
   users.filter(u=>deletedUsers.has(u.username)).forEach(u=>{deleteAccountStrict(u.username).catch(()=>{});});
   daily.forEach(t=>{
-    if((t.task_date||'').startsWith(DELETED_USER_PREFIX))return;
-    data.dailyTasks[t.task_date]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};
+    const key=t.task_date||'';
+    if(key.startsWith(DELETED_USER_PREFIX))return;
+    if(key===META_CLASSES_KEY){data.classes=parseMetaJSON(t.homework,{});return;}
+    if(key===META_PROGRAMS_KEY){data.studentPrograms=parseMetaJSON(t.homework,{});return;}
+    data.dailyTasks[key]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};
   });
   student.forEach(t=>{if(!data.studentTasks[t.username])data.studentTasks[t.username]={};data.studentTasks[t.username][t.task_date]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};});
   checkins.forEach(c=>{if(!data.checkins[c.username])data.checkins[c.username]={};data.checkins[c.username][c.checkin_date]={homework:!!c.homework,dictation:!!c.dictation,recite:!!c.recite,speaking:!!c.speaking};});
@@ -529,7 +554,11 @@ async function fetchSupabaseData(){
   return normalizeData(data);
 }
 
-function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{}};}
+function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{}};}
+
+function parseMetaJSON(text,fallback){
+  try{const v=JSON.parse(text||'');return v&&typeof v==='object'?v:fallback;}catch(e){return fallback;}
+}
 
 function normalizeData(data){
   if(!data||typeof data!=='object')data=getInitialData();
@@ -541,7 +570,20 @@ function normalizeData(data){
   data.chatMessages=data.chatMessages||[];
   data.hiddenChatMessages=data.hiddenChatMessages||{};
   data.deletedUsers=data.deletedUsers||[];
+  data.classes=data.classes||{};
+  data.studentPrograms=data.studentPrograms||{};
   if(!data.users['toni']&&data.users['Antonio']){data.users['toni']=data.users['Antonio'];delete data.users['Antonio'];}
+  const validStudents=new Set(Object.entries(data.users).filter(([,u])=>u.role==='student').map(([name])=>name));
+  Object.keys(data.studentPrograms).forEach(name=>{if(!validStudents.has(name))delete data.studentPrograms[name];});
+  validStudents.forEach(name=>{
+    const p=data.studentPrograms[name]||{};
+    data.studentPrograms[name]={italian:p.italian!==false,portfolio:!!p.portfolio};
+  });
+  Object.keys(data.classes).forEach(cls=>{
+    if(!Array.isArray(data.classes[cls]))data.classes[cls]=[];
+    data.classes[cls]=Array.from(new Set(data.classes[cls].filter(name=>validStudents.has(name))));
+    if(data.classes[cls].length===0)delete data.classes[cls];
+  });
   return data;
 }
 
@@ -561,6 +603,7 @@ async function saveDataNow(msg,pending){
   else if(msg.startsWith('聊天:')||msg.startsWith('聊天(重试):'))await supabaseSaveChatMessages(pending);
   else if(msg.startsWith('隐藏聊天:'))await supabaseSaveHiddenChatMessages(pending);
   else if(msg.startsWith('注册学生:')||msg.startsWith('添加教师:')||msg.startsWith('修改密码:'))await supabaseSaveOneUser(pending,msg.split(':').slice(1).join(':').trim());
+  else if(msg.startsWith('班级:')||msg.startsWith('专业:'))await supabaseSaveTasks(pending);
   else if(msg.startsWith('同步本地注册:'))await supabaseSaveUsers(pending);
   else await supabaseSaveAll(pending);
   appData=pending;saveLocalData();
@@ -622,6 +665,7 @@ async function supabaseRequest(path,options={}){
 }
 function taskRow(date,t){return{task_date:date,homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||'',updated_at:new Date().toISOString()};}
 function studentTaskRow(username,date,t){return{username,task_date:date,homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||'',updated_at:new Date().toISOString()};}
+function metaTaskRow(key,obj){return{task_date:key,homework:JSON.stringify(obj||{}),dictation:'meta',recite:'',speaking:'',updated_at:new Date().toISOString()};}
 async function supabaseUpsert(table,rows,onConflict){
   if(!rows||rows.length===0)return;
   await supabaseRequest(`${table}?on_conflict=${encodeURIComponent(onConflict)}`,{method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)});
@@ -709,6 +753,8 @@ async function supabaseClearOldChat(){
 }
 async function supabaseSaveTasks(data){
   const dailyRows=Object.entries(data.dailyTasks||{}).map(([date,t])=>taskRow(date,t));
+  dailyRows.push(metaTaskRow(META_CLASSES_KEY,data.classes||{}));
+  dailyRows.push(metaTaskRow(META_PROGRAMS_KEY,data.studentPrograms||{}));
   const studentRows=[];
   Object.entries(data.studentTasks||{}).forEach(([username,dates])=>Object.entries(dates||{}).forEach(([date,t])=>studentRows.push(studentTaskRow(username,date,t))));
   await supabaseUpsert('daily_tasks',dailyRows,'task_date');
@@ -738,12 +784,27 @@ async function supabaseSaveAll(data){
   await supabaseSaveHiddenChatMessages(data);
 }
 
-function getTaskForStudent(student,date,cat){
+function portfolioDate(date){return PORTFOLIO_PREFIX+date;}
+function taskStorageDate(date,program){return program==='portfolio'?portfolioDate(date):date;}
+function getTaskForStudent(student,date,cat,program){
+  const key=taskStorageDate(date,program||'italian');
   const st=appData.studentTasks||{};
-  if(st[student]&&st[student][date]&&st[student][date][cat])return st[student][date][cat];
+  if(st[student]&&st[student][key]&&st[student][key][cat])return st[student][key][cat];
   const dt=appData.dailyTasks||{};
-  if(dt[date]&&dt[date][cat])return dt[date][cat];
+  if(dt[key]&&dt[key][cat])return dt[key][cat];
   return '';
+}
+function getStudentPrograms(name){
+  normalizeData(appData);
+  return (appData.studentPrograms&&appData.studentPrograms[name])||{italian:true,portfolio:false};
+}
+function hasProgram(name,program){return !!getStudentPrograms(name)[program];}
+function getClassMembers(className){return ((appData.classes||{})[className]||[]).filter(name=>appData.users[name]&&appData.users[name].role==='student');}
+function getStudentClass(name){
+  return Object.entries(appData.classes||{}).find(([,members])=>(members||[]).includes(name))?.[0]||'';
+}
+function getUnclassedStudents(){
+  return Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([n])=>n).filter(n=>!getStudentClass(n));
 }
 function getTaskKeys(){return ['homework','dictation','recite'];}
 function getTaskConfigs(){return [
@@ -865,21 +926,89 @@ async function switchTeacherTab(tab){
 }
 
 function renderTeacherStudents(main){
+  normalizeData(appData);
   const students=Object.entries(appData.users).filter(([,v])=>v.role==='student');
   const today=getToday();
+  const classNames=Object.keys(appData.classes||{}).sort((a,b)=>a.localeCompare(b));
+  const classOptions=classNames.map(c=>`<option value="${c}">${c}</option>`).join('');
+  const studentOptions=students.map(([name])=>`<option value="${name}">${name}</option>`).join('');
+  const classTools=`<div class="class-tools">
+    <h4 style="font-size:14px;margin-bottom:10px">${_('classManage')}</h4>
+    <div class="row"><input type="text" id="newClassName" placeholder="${_('className')}"><button type="button" class="btn-sm primary" onclick="createClass()">${_('classCreate')}</button></div>
+    <div class="row"><select id="classStudentSelect">${studentOptions}</select><select id="classSelect"><option value="__none__">${_('classUnassigned')}</option>${classOptions}</select><button type="button" class="btn-sm primary" onclick="assignStudentToClass()">${_('classAddStudent')}</button></div>
+    <div class="hint">${_('taskDefaultHint')}</div>
+  </div>`;
+  const renderStudentCard=name=>{
+    const ci=(appData.checkins[name]||{})[today]||{};
+    const st=appData.streaks[name]||{};
+    const dc=getTaskKeys().filter(k=>ci[k]).length;
+    const ad=dc===getTaskKeys().length;
+    const p=getStudentPrograms(name);
+    const tags=`<div class="student-program-tags">${p.italian?`<span class="program-tag">${_('programItalian')}</span>`:''}${p.portfolio?`<span class="program-tag">${_('programPortfolio')}</span>`:''}</div>`;
+    return`<div class="student-card" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}${tags}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>`;
+  };
   let listHTML='';
   if(students.length===0){
     listHTML='<div class="empty-state"><div class="icon">📭</div>'+_('noStudents')+'</div>';
   }else{
-    listHTML=students.map(([name])=>{
-      const ci=(appData.checkins[name]||{})[today]||{};
-      const st=appData.streaks[name]||{};
-      const dc=getTaskKeys().filter(k=>ci[k]).length;
-      const ad=dc===getTaskKeys().length;
-      return`<div class="student-card" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>`;
+    listHTML=classNames.map(cls=>{
+      const members=getClassMembers(cls);
+      const body=members.length?members.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>';
+      return`<div class="submenu-toggle" onclick="toggleSubmenu(this,'class_${encodeURIComponent(cls)}')"><span>🏫 ${cls} (${members.length})</span><span class="arrow">▶</span></div>
+      <div class="submenu-body" id="class_${encodeURIComponent(cls)}">
+        <div style="display:flex;gap:8px;margin-bottom:10px"><button type="button" class="btn-sm outline" onclick="event.stopPropagation();renameClass('${cls}')">${_('classRename')}</button><button type="button" class="btn-sm danger" onclick="event.stopPropagation();deleteClass('${cls}')">${_('classDelete')}</button></div>
+        ${body}
+      </div>`;
     }).join('');
+    const unclassed=getUnclassedStudents();
+    listHTML+=`<div class="submenu-toggle open" onclick="toggleSubmenu(this,'unclassedStudents')"><span>👤 ${_('classUnassigned')} (${unclassed.length})</span><span class="arrow">▶</span></div><div class="submenu-body show" id="unclassedStudents">${unclassed.length?unclassed.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>'}</div>`;
   }
-  main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+listHTML+'<div id="checkinDetailArea"></div>';
+  main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+classTools+listHTML+'<div id="checkinDetailArea"></div>';
+}
+
+async function saveClassData(message){
+  normalizeData(appData);saveLocalData();showLoading(_('syncing'));
+  try{await saveData('班级:'+message);updateSyncStatus(true);showToast(_('classUpdated'));}
+  catch(e){updateSyncStatus(false);showToast(_('syncFail'));}
+  hideLoading();
+  if(currentTeacherTab==='students')renderTeacherStudents(document.getElementById('teacherMain'));
+}
+
+async function createClass(){
+  const input=document.getElementById('newClassName');
+  const name=(input&&input.value||'').trim();
+  if(!name){showToast(_('errorFill'));return;}
+  if(!appData.classes)appData.classes={};
+  if(!appData.classes[name])appData.classes[name]=[];
+  if(input)input.value='';
+  await saveClassData('create '+name);
+}
+
+async function assignStudentToClass(){
+  const student=(document.getElementById('classStudentSelect')||{}).value;
+  const cls=(document.getElementById('classSelect')||{}).value;
+  if(!student||!cls){showToast(_('errorFill'));return;}
+  Object.keys(appData.classes||{}).forEach(c=>{appData.classes[c]=(appData.classes[c]||[]).filter(n=>n!==student);});
+  if(cls==='__none__'){await saveClassData('unassign '+student);return;}
+  if(!appData.classes[cls])appData.classes[cls]=[];
+  appData.classes[cls].push(student);
+  await saveClassData('assign '+student+' '+cls);
+}
+
+async function renameClass(oldName){
+  const name=prompt(_('className'),oldName);
+  if(!name||name.trim()===oldName)return;
+  const newName=name.trim();
+  if(!appData.classes)appData.classes={};
+  appData.classes[newName]=appData.classes[oldName]||[];
+  delete appData.classes[oldName];
+  await saveClassData('rename '+oldName+' '+newName);
+}
+
+async function deleteClass(name){
+  if(!confirm(_('classDelete')+' "'+name+'"?'))return;
+  if(appData.classes)delete appData.classes[name];
+  await saveClassData('delete '+name);
 }
 
 async function refreshTeacherStudents(){
@@ -918,6 +1047,7 @@ async function teacherToggleCheckin(name,key){
   if(!appData.checkins[name][today])appData.checkins[name][today]=getEmptyCheckin();
   const ci=appData.checkins[name][today];
   ci[key]=!ci[key];
+  const allDone=getTaskKeys().every(k=>ci[k]);
   updateStudentProgress(name);
   saveLocalData();
   showLoading(_('syncing'));
@@ -954,12 +1084,21 @@ function updateStudentProgress(name){
 function renderTeacherTasks(main){
   const students=Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([n])=>n);
   const today=getToday();
+  const storageDate=taskStorageDate(today,teacherTaskProgram);
   let tasks={};
-  if(teacherTaskStudent==='__default__'){tasks=appData.dailyTasks[today]||{};}
-  else{tasks=((appData.studentTasks||{})[teacherTaskStudent]||{})[today]||{};}
+  if(teacherTaskStudent==='__default__'){tasks=appData.dailyTasks[storageDate]||{};}
+  else if(teacherTaskStudent.startsWith('class:')){
+    const members=getClassMembers(teacherTaskStudent.slice(6));
+    tasks=members[0]&&((appData.studentTasks||{})[members[0]]||{})[storageDate]||{};
+  }else{const name=teacherTaskStudent.replace(/^student:/,'');tasks=((appData.studentTasks||{})[name]||{})[storageDate]||{};}
+  const classNames=Object.keys(appData.classes||{}).sort((a,b)=>a.localeCompare(b));
+  const targetOptions=`<option value="__default__" ${teacherTaskStudent==='__default__'?'selected':''}>${_('taskDefaultOption')}</option>`+
+    classNames.map(c=>`<option value="class:${c}" ${teacherTaskStudent==='class:'+c?'selected':''}>${_('taskClassOption')}${c}</option>`).join('')+
+    students.map(s=>`<option value="student:${s}" ${teacherTaskStudent==='student:'+s||teacherTaskStudent===s?'selected':''}>👤 ${s}</option>`).join('');
   main.innerHTML=`<div class="task-editor">
     <div style="background:#fffbe6;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#996;line-height:1.5">${_('taskDefaultHint')}</div>
-    <div class="row"><select id="taskStudent" onchange="changeTaskStudent()"><option value="__default__" ${teacherTaskStudent==='__default__'?'selected':''}>${_('taskDefaultOption')}</option>${students.map(s=>`<option value="${s}" ${teacherTaskStudent===s?'selected':''}>👤 ${s}</option>`).join('')}</select></div>
+    <div class="program-switch"><button type="button" class="${teacherTaskProgram==='italian'?'active':''}" onclick="changeTaskProgram('italian')">${_('taskItalian')}</button><button type="button" class="${teacherTaskProgram==='portfolio'?'active':''}" onclick="changeTaskProgram('portfolio')">${_('taskPortfolio')}</button></div>
+    <div class="row"><select id="taskStudent" onchange="changeTaskStudent()">${targetOptions}</select></div>
     <div class="row"><input type="date" id="taskDate" value="${today}" onchange="loadTaskForDate()"><button class="btn-sm primary" onclick="saveTeacherTasks()">${_('taskSave')}</button></div>
     <div class="cat-label">${_('taskHomework')}</div><textarea id="editHomework" placeholder="${_('taskHomework')}">${tasks.homework||''}</textarea>
     <div class="cat-label">${_('taskDictation')}</div><textarea id="editDictation" placeholder="${_('taskDictation')}">${tasks.dictation||''}</textarea>
@@ -969,11 +1108,16 @@ function renderTeacherTasks(main){
 }
 
 function changeTaskStudent(){teacherTaskStudent=document.getElementById('taskStudent').value;loadTaskForDate();}
+function changeTaskProgram(program){teacherTaskProgram=program;renderTeacherTasks(document.getElementById('teacherMain'));}
 function loadTaskForDate(){
   const date=document.getElementById('taskDate').value;
+  const storageDate=taskStorageDate(date,teacherTaskProgram);
   let tasks={};
-  if(teacherTaskStudent==='__default__'){tasks=appData.dailyTasks[date]||{};}
-  else{tasks=((appData.studentTasks||{})[teacherTaskStudent]||{})[date]||{};}
+  if(teacherTaskStudent==='__default__'){tasks=appData.dailyTasks[storageDate]||{};}
+  else if(teacherTaskStudent.startsWith('class:')){
+    const members=getClassMembers(teacherTaskStudent.slice(6));
+    tasks=members[0]&&((appData.studentTasks||{})[members[0]]||{})[storageDate]||{};
+  }else{const name=teacherTaskStudent.replace(/^student:/,'');tasks=((appData.studentTasks||{})[name]||{})[storageDate]||{};}
   document.getElementById('editHomework').value=tasks.homework||'';
   document.getElementById('editDictation').value=tasks.dictation||'';
   document.getElementById('editRecite').value=tasks.recite||'';
@@ -981,11 +1125,19 @@ function loadTaskForDate(){
 
 async function saveTeacherTasks(){
   const date=document.getElementById('taskDate').value;
+  const storageDate=taskStorageDate(date,teacherTaskProgram);
   const tasks={homework:document.getElementById('editHomework').value.trim(),dictation:document.getElementById('editDictation').value.trim(),recite:document.getElementById('editRecite').value.trim(),speaking:''};
-  if(teacherTaskStudent==='__default__'){if(!appData.dailyTasks[date])appData.dailyTasks[date]={};Object.assign(appData.dailyTasks[date],tasks);}
-  else{if(!appData.studentTasks)appData.studentTasks={};if(!appData.studentTasks[teacherTaskStudent])appData.studentTasks[teacherTaskStudent]={};if(!appData.studentTasks[teacherTaskStudent][date])appData.studentTasks[teacherTaskStudent][date]={};Object.assign(appData.studentTasks[teacherTaskStudent][date],tasks);}
+  if(teacherTaskStudent==='__default__'){if(!appData.dailyTasks[storageDate])appData.dailyTasks[storageDate]={};Object.assign(appData.dailyTasks[storageDate],tasks);}
+  else if(teacherTaskStudent.startsWith('class:')){
+    const members=getClassMembers(teacherTaskStudent.slice(6));
+    if(!appData.studentTasks)appData.studentTasks={};
+    members.forEach(name=>{if(!appData.studentTasks[name])appData.studentTasks[name]={};if(!appData.studentTasks[name][storageDate])appData.studentTasks[name][storageDate]={};Object.assign(appData.studentTasks[name][storageDate],tasks);});
+  }else{
+    const name=teacherTaskStudent.replace(/^student:/,'');
+    if(!appData.studentTasks)appData.studentTasks={};if(!appData.studentTasks[name])appData.studentTasks[name]={};if(!appData.studentTasks[name][storageDate])appData.studentTasks[name][storageDate]={};Object.assign(appData.studentTasks[name][storageDate],tasks);
+  }
   saveLocalData();
-  const label=teacherTaskStudent==='__default__'?_('taskDefaultOption'):'学生 '+teacherTaskStudent;
+  const label=teacherTaskStudent==='__default__'?_('taskDefaultOption'):teacherTaskStudent;
   showLoading(_('syncing'));
   try{await saveData('编辑 '+date+' '+label+' 作业');updateSyncStatus(true);}catch(e){updateSyncStatus(false);setTimeout(async()=>{try{await saveData('编辑 '+date+' '+label+' 作业(重试)');updateSyncStatus(true);}catch(e){}},5000);}
   hideLoading();
@@ -1000,10 +1152,26 @@ function renderTeacherSettings(main){
   const users=Object.entries(appData.users);
   const teacherUsers=users.filter(([,info])=>info.role==='teacher').sort(([a],[b])=>a.localeCompare(b));
   const studentUsers=users.filter(([,info])=>info.role==='student').sort(([a],[b])=>a.localeCompare(b));
-  const renderUserRows=list=>list.length?list.map(([name,info])=>`<div class="user-list-item"><div><b>${name}</b> <span class="role-tag ${info.role}">${info.role==='teacher'?_('settingsTeacher'):_('settingsStudent')}</span></div>${name!=='toni'?`<button type="button" class="btn-sm danger" onclick="deleteUser('${name}')">${_('settingsDelete')}</button>`:'<span style="font-size:11px;color:#999">'+_('settingsMainAdmin')+'</span>'}</div>`).join(''):`<div class="empty-state" style="padding:16px">--</div>`;
+  const renderUserRows=list=>list.length?list.map(([name,info])=>{
+    if(info.role==='student'){
+      const p=getStudentPrograms(name);
+      return`<div class="submenu-toggle" onclick="toggleSubmenu(this,'studentSet_${encodeURIComponent(name)}')"><span><b>${name}</b> <span class="role-tag student">${_('settingsStudent')}</span></span><span class="arrow">▶</span></div>
+      <div class="submenu-body" id="studentSet_${encodeURIComponent(name)}">
+        <div class="settings-card"><h4>${_('programTitle')}</h4>
+          <div class="program-checks">
+            <label><input type="checkbox" id="prog_it_${encodeURIComponent(name)}" ${p.italian?'checked':''}>${_('programItalian')}</label>
+            <label><input type="checkbox" id="prog_pf_${encodeURIComponent(name)}" ${p.portfolio?'checked':''}>${_('programPortfolio')}</label>
+          </div>
+          <button type="button" class="btn-sm primary" onclick="saveStudentProgram('${name}')">${_('taskSave')}</button>
+          <button type="button" class="btn-sm danger" onclick="deleteUser('${name}')">${_('settingsDelete')}</button>
+        </div>
+      </div>`;
+    }
+    return`<div class="user-list-item"><div><b>${name}</b> <span class="role-tag ${info.role}">${_('settingsTeacher')}</span></div>${name!=='toni'?`<button type="button" class="btn-sm danger" onclick="deleteUser('${name}')">${_('settingsDelete')}</button>`:'<span style="font-size:11px;color:#999">'+_('settingsMainAdmin')+'</span>'}</div>`;
+  }).join(''):`<div class="empty-state" style="padding:16px">--</div>`;
   let ts=`<div class="settings-card"><h4>${_('settingsToken')}</h4><div style="display:flex;align-items:center;gap:10px"><span style="color:#009246;font-weight:600;">${_('settingsTokenOk')}</span><button class="btn-sm outline" onclick="refreshCloudData()">${_('settingsTokenChange')}</button></div><div class="hint">${_('settingsTokenHint')}</div></div>`;
   const canAddTeacher=currentUser&&currentUser.username==='toni';
-  const addAccountCard=`<div class="settings-card"><h4>${canAddTeacher?_('settingsAddTeacher'):_('settingsAddStudent')}</h4>${canAddTeacher?`<select id="newAccountRole" style="margin-bottom:10px"><option value="student">${_('settingsStudent')}</option><option value="teacher">${_('settingsTeacher')}</option></select>`:`<input type="hidden" id="newAccountRole" value="student">`}<div class="row"><input type="text" id="newAccountUser" placeholder="${_('settingsTeacherUser')}" style="flex:1" autocapitalize="none"><input type="password" id="newAccountPass" placeholder="${_('settingsTeacherPass')}" style="flex:1"><button type="button" class="btn-sm primary" onclick="addAccount()">${_('settingsAdd')}</button></div></div>`;
+  const addAccountCard=`<div class="settings-card"><h4>${canAddTeacher?_('settingsAddTeacher'):_('settingsAddStudent')}</h4>${canAddTeacher?`<select id="newAccountRole" style="margin-bottom:10px"><option value="student">${_('settingsStudent')}</option><option value="teacher">${_('settingsTeacher')}</option></select>`:`<input type="hidden" id="newAccountRole" value="student">`}<div class="program-checks"><label><input type="checkbox" id="newProgItalian" checked>${_('programItalian')}</label><label><input type="checkbox" id="newProgPortfolio">${_('programPortfolio')}</label></div><div class="row"><input type="text" id="newAccountUser" placeholder="${_('settingsTeacherUser')}" style="flex:1" autocapitalize="none"><input type="password" id="newAccountPass" placeholder="${_('settingsTeacherPass')}" style="flex:1"><button type="button" class="btn-sm primary" onclick="addAccount()">${_('settingsAdd')}</button></div></div>`;
 
   main.innerHTML=ts+`
     <div class="settings-card"><h4>${_('settingsLanguage')}</h4>
@@ -1061,11 +1229,29 @@ async function addAccount(){
   if(appData.users[u]){showToast(_('errorUserExists'));return;}
   const before=cloneData(appData);
   appData.users[u]={password:p,role};
+  if(role==='student'){
+    const italian=(document.getElementById('newProgItalian')||{}).checked!==false;
+    const portfolio=!!((document.getElementById('newProgPortfolio')||{}).checked);
+    appData.studentPrograms[u]={italian:italian||!portfolio,portfolio};
+  }
   showLoading(_('syncing'));
-  try{await supabaseCreateNewUser(u,p,role);saveLocalData();updateSyncStatus(true);}
+  try{await supabaseCreateNewUser(u,p,role);await supabaseSaveTasks(appData);saveLocalData();updateSyncStatus(true);}
   catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(e&&e.message==='用户已删除'?_('errorDeletedUser'):e&&e.message==='用户已存在'?_('errorUserExists'):_('syncFail'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));return;}
   hideLoading();
   showToast(_('teacherAdded'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));
+}
+
+async function saveStudentProgram(name){
+  const it=!!(document.getElementById('prog_it_'+encodeURIComponent(name))||{}).checked;
+  const pf=!!(document.getElementById('prog_pf_'+encodeURIComponent(name))||{}).checked;
+  if(!it&&!pf){showToast(_('errorFill'));return;}
+  if(!appData.studentPrograms)appData.studentPrograms={};
+  appData.studentPrograms[name]={italian:it,portfolio:pf};
+  saveLocalData();showLoading(_('syncing'));
+  try{await saveData('专业:'+name);updateSyncStatus(true);showToast(_('programSaved'));}
+  catch(e){updateSyncStatus(false);showToast(_('syncFail'));}
+  hideLoading();
+  if(currentTeacherTab==='settings')renderTeacherSettings(document.getElementById('teacherMain'));
 }
 
 async function resetStudentPassword(){
@@ -1096,8 +1282,10 @@ async function deleteUser(name){
   const before=cloneData(appData);
   delete appData.users[name];delete appData.checkins[name];delete appData.streaks[name];
   if(appData.studentTasks)delete appData.studentTasks[name];
+  if(appData.studentPrograms)delete appData.studentPrograms[name];
+  Object.keys(appData.classes||{}).forEach(cls=>{appData.classes[cls]=(appData.classes[cls]||[]).filter(n=>n!==name);});
   showLoading(_('syncing'));
-  try{await deleteAccountStrict(name);saveLocalData();updateSyncStatus(true);}
+  try{await deleteAccountStrict(name);await supabaseSaveTasks(appData);saveLocalData();updateSyncStatus(true);}
   catch(e){appData=before;saveLocalData();updateSyncStatus(false);hideLoading();showToast(_('syncFail'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));return;}
   hideLoading();
   showToast(_('userDeleted'));if(currentTeacherTab==='settings'&&teacherViewEpoch===viewEpoch)renderTeacherSettings(document.getElementById('teacherMain'));
@@ -1127,9 +1315,16 @@ function switchStudentTab(tab){
 function renderStudentTasks(main){
   const today=getToday();
   const cfgs=getTaskConfigs();
-  main.innerHTML=`<div class="section-title">📅 ${formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`+
-    cfgs.map(c=>{const content=getTaskForStudent(currentUser.username,today,c.key);return`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content" lang="it">${content}</div></div></div>`;}).join('')+
-    `<div style="text-align:center;color:#bbb;font-size:12px;margin-top:12px">${_('taskReadonlyHint')}</div><div class="footer">${_('footer')}</div>`;
+  const programs=getStudentPrograms(currentUser.username);
+  const renderSection=(program,title)=>{
+    const cards=cfgs.map(c=>({c,content:getTaskForStudent(currentUser.username,today,c.key,program)})).filter(x=>x.content).map(({c,content})=>`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content" lang="it">${content}</div></div></div>`).join('');
+    return `${title?`<div class="section-title">${title}</div>`:''}${cards}`;
+  };
+  const onlyPortfolio=!programs.italian&&programs.portfolio;
+  let html=`<div class="section-title">${onlyPortfolio?_('taskPortfolioTitle'):'📅 '+formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`;
+  if(programs.italian)html+=renderSection('italian',_('taskItalian'));
+  if(programs.portfolio)html+=onlyPortfolio?renderSection('portfolio',''):renderSection('portfolio',_('taskPortfolioTitle'));
+  main.innerHTML=html+`<div style="text-align:center;color:#bbb;font-size:12px;margin-top:12px">${_('taskReadonlyHint')}</div><div class="footer">${_('footer')}</div>`;
 }
 
 async function refreshStudentTasks(){
