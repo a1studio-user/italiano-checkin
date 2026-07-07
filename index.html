@@ -42,6 +42,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helv
 .header h1{font-size:18px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.2)}
 .user-tag{font-size:11px;color:rgba(255,255,255,.85)}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid #eee;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+body.keyboard-open .bottom-nav{display:none}
 .bottom-nav .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px 6px;cursor:pointer;color:#999;font-size:9px;gap:3px;transition:all .15s;-webkit-tap-highlight-color:transparent;border:none;background:none}
 .bottom-nav .nav-item .nav-icon{font-size:18px;line-height:1}
 .bottom-nav .nav-item.active{color:#009246;font-weight:600}
@@ -505,7 +506,7 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
 const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', PORTFOLIO_PREFIX='__portfolio__:';
-let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, teacherOpenSubmenus=new Set(['unclassedStudents']), chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -855,6 +856,16 @@ function showToast(m){const t=document.getElementById('toast');t.textContent=m;t
 
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
+function setupKeyboardNavGuard(){
+  const editable='input, textarea, select';
+  document.addEventListener('focusin',e=>{
+    if(e.target&&e.target.matches&&e.target.matches(editable))document.body.classList.add('keyboard-open');
+  });
+  document.addEventListener('focusout',e=>{
+    if(e.target&&e.target.matches&&e.target.matches(editable))setTimeout(()=>document.body.classList.remove('keyboard-open'),120);
+  });
+}
+
 function showRegister(){showLogin();}
 function showLogin(){document.getElementById('loginError').textContent='';document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';showPage('loginPage');}
 
@@ -891,6 +902,10 @@ function doLogout(){
 function toggleSubmenu(el,id){
   el.classList.toggle('open');
   document.getElementById(id).classList.toggle('show');
+  if(id&&currentTeacherTab==='students'){
+    if(el.classList.contains('open'))teacherOpenSubmenus.add(id);
+    else teacherOpenSubmenus.delete(id);
+  }
 }
 
 function changeOwnPassword(){
@@ -944,6 +959,7 @@ async function switchTeacherTab(tab){
     teacherRefreshTimer=setInterval(async()=>{
       if(currentTeacherTab!=='students')return;
       if(classEditInProgress)return;
+      if(expandedStudentCheckin)return;
       const pollEpoch=teacherViewEpoch;
       try{await fetchDataFromApi();if(currentTeacherTab!=='students'||teacherViewEpoch!==pollEpoch)return;renderTeacherStudents(document.getElementById('teacherMain'));updateSyncStatus(true);}catch(e){if(currentTeacherTab==='students'&&teacherViewEpoch===pollEpoch)updateSyncStatus(false);}
     },20000);
@@ -963,6 +979,10 @@ async function switchTeacherTab(tab){
 
 function renderTeacherStudents(main){
   normalizeData(appData);
+  if(expandedStudentCheckin){
+    const cls=getStudentClass(expandedStudentCheckin);
+    teacherOpenSubmenus.add(cls?'class_'+encodeURIComponent(cls):'unclassedStudents');
+  }
   const students=sortNamesByPinyin(Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([name])=>name)).map(name=>[name,appData.users[name]]);
   const today=getToday();
   const classNames=Object.keys(appData.classes||{}).sort((a,b)=>a.localeCompare(b));
@@ -981,7 +1001,7 @@ function renderTeacherStudents(main){
     const ad=dc===getTaskKeys().length;
     const p=getStudentPrograms(name);
     const tags=`<div class="student-program-tags">${p.italian?`<span class="program-tag">${_('programItalian')}</span>`:''}${p.portfolio?`<span class="program-tag">${_('programPortfolio')}</span>`:''}</div>`;
-    return`<div class="student-card" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}${tags}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>${expandedStudentCheckin===name?renderStudentCheckinDetail(name):''}`;
+    return`<div class="student-card" id="studentCard_${encodeURIComponent(name)}" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}${tags}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>${expandedStudentCheckin===name?renderStudentCheckinDetail(name):''}`;
   };
   let listHTML='';
   if(students.length===0){
@@ -990,14 +1010,17 @@ function renderTeacherStudents(main){
     listHTML=classNames.map(cls=>{
       const members=sortNamesByPinyin(getClassMembers(cls));
       const body=members.length?members.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>';
-      return`<div class="submenu-toggle" onclick="toggleSubmenu(this,'class_${encodeURIComponent(cls)}')"><span>🏫 ${cls} (${members.length})</span><span class="arrow">▶</span></div>
-      <div class="submenu-body" id="class_${encodeURIComponent(cls)}">
+      const id='class_'+encodeURIComponent(cls);
+      const open=teacherOpenSubmenus.has(id);
+      return`<div class="submenu-toggle ${open?'open':''}" onclick="toggleSubmenu(this,'${id}')"><span>🏫 ${cls} (${members.length})</span><span class="arrow">▶</span></div>
+      <div class="submenu-body ${open?'show':''}" id="${id}">
         <div style="display:flex;gap:8px;margin-bottom:10px"><button type="button" class="btn-sm outline" onclick="event.stopPropagation();renameClass('${cls}')">${_('classRename')}</button><button type="button" class="btn-sm danger" onclick="event.stopPropagation();deleteClass('${cls}')">${_('classDelete')}</button></div>
         ${body}
       </div>`;
     }).join('');
     const unclassed=getUnclassedStudents();
-    listHTML+=`<div class="submenu-toggle open" onclick="toggleSubmenu(this,'unclassedStudents')"><span>👤 ${_('classUnassigned')} (${unclassed.length})</span><span class="arrow">▶</span></div><div class="submenu-body show" id="unclassedStudents">${unclassed.length?unclassed.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>'}</div>`;
+    const unclassedOpen=teacherOpenSubmenus.has('unclassedStudents');
+    listHTML+=`<div class="submenu-toggle ${unclassedOpen?'open':''}" onclick="toggleSubmenu(this,'unclassedStudents')"><span>👤 ${_('classUnassigned')} (${unclassed.length})</span><span class="arrow">▶</span></div><div class="submenu-body ${unclassedOpen?'show':''}" id="unclassedStudents">${unclassed.length?unclassed.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>'}</div>`;
   }
   main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+classTools+listHTML;
 }
@@ -1065,6 +1088,15 @@ async function refreshTeacherStudents(){
 function showStudentCheckin(name){
   expandedStudentCheckin=expandedStudentCheckin===name?'':name;
   renderTeacherStudents(document.getElementById('teacherMain'));
+  focusExpandedStudent();
+}
+
+function focusExpandedStudent(){
+  if(!expandedStudentCheckin)return;
+  setTimeout(()=>{
+    const el=document.getElementById('studentCard_'+encodeURIComponent(expandedStudentCheckin));
+    if(el)el.scrollIntoView({block:'nearest',behavior:'smooth'});
+  },0);
 }
 
 function renderStudentCheckinDetail(name){
@@ -1107,6 +1139,7 @@ async function teacherToggleCheckin(name,key){
   if(allDone){setTimeout(()=>spawnConfetti(),100);setTimeout(()=>showToast(_('allDone')),800);}
   expandedStudentCheckin=name;
   renderTeacherStudents(document.getElementById('teacherMain'));
+  focusExpandedStudent();
 }
 
 function updateStudentProgress(name){
@@ -1207,7 +1240,9 @@ async function saveTeacherTasks(){
 }
 
 // ===== TEACHER: Podium =====
-function renderTeacherPodium(main){main.innerHTML=renderPodiumHTML();}
+function renderTeacherPodium(main){
+  main.innerHTML=`<div class="section-title">${_('podiumTitle')} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshPodium()">${_('chatRefresh')}</button></div>`+renderPodiumHTML();
+}
 
 // ===== TEACHER: Settings =====
 function renderTeacherSettings(main){
@@ -1443,9 +1478,23 @@ async function refreshStudentTasks(){
 }
 
 function renderStudentPodium(main){
-  main.innerHTML=renderPodiumHTML();
+  main.innerHTML=`<div class="section-title">${_('podiumTitle')} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshPodium()">${_('chatRefresh')}</button></div>`+renderPodiumHTML();
   const s=appData.streaks[currentUser.username]||{streak:0,flowers:0};
   main.innerHTML+=`<div class="stats-row" style="margin-top:16px"><div class="stat-card"><div class="icon">🔥</div><div class="number" style="color:#ce2b37">${s.streak||0}</div><div class="label">${_('podiumMyStreak')}</div></div><div class="stat-card flower"><div class="icon">👏</div><div class="number">${s.flowers||0}</div><div class="label">${_('podiumMyFlowers')}</div></div></div>`;
+}
+
+async function refreshPodium(){
+  showLoading(_('syncing'));
+  try{
+    await fetchDataFromApi();
+    updateSyncStatus(true);
+    if(currentUser&&currentUser.role==='teacher'&&currentTeacherTab==='podium')renderTeacherPodium(document.getElementById('teacherMain'));
+    if(currentUser&&currentUser.role==='student'&&currentStudentTab==='podium')renderStudentPodium(document.getElementById('studentMain'));
+  }catch(e){
+    updateSyncStatus(false);
+    showToast(_('syncFail'));
+  }
+  hideLoading();
 }
 
 function renderStudentSettings(main){
@@ -1609,6 +1658,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'){if(document.getEleme
 // ===== INIT =====
 clearLegacyPendingUsers();
 clearLegacyDefaultTaskCache();
+setupKeyboardNavGuard();
 if(location.protocol.startsWith('http')&&new URLSearchParams(location.search).get('v')!==APP_VERSION.slice(1)){
   location.replace(location.pathname+'?v='+APP_VERSION.slice(1));
 }
