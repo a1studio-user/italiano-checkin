@@ -321,7 +321,8 @@ const I18N = {
     podiumTitle:'🏆 Bravo 排行榜', podiumEmpty:'虚位以待', podiumHint:'仅展示前三名，实时更新',
     podiumMyStreak:'我的连续打卡', podiumMyFlowers:'我的 Bravo',
     noStudents:'还没有学生注册', studentListTitle:'👥 学生打卡', todayCheckin:'今日', todayN:'今日',
-    checkinDetail:'今日打卡', checkinDone:'已完成', checkinPending:'待完成', checkinCollapse:'收起',
+    checkinDetail:'打卡', checkinDate:'打卡日期', checkinDateHint:'仅可选择本周内截至今天的日期；三日内打卡计入 Bravo。',
+    checkinDateOutOfRange:'只能选择本周内截至今天的日期', checkinDone:'已完成', checkinPending:'待完成', checkinCollapse:'收起',
     streakDays:'天', flowersUnit:'bravo',
     taskDefaultHint:'💡 默认作业适用于所有学生。选择具体学生可为其单独定制，未定制则使用默认。',
     taskDefaultOption:'📋 默认（所有学生）', taskSave:'💾 保存', taskSaved:'作业已保存', taskSyncSaved:'并同步',
@@ -376,7 +377,8 @@ const I18N = {
     podiumTitle:'🏆 Bravo Podium', podiumEmpty:'Waiting', podiumHint:'Top 3, live updates',
     podiumMyStreak:'My Streak', podiumMyFlowers:'My Bravo',
     noStudents:'No students registered yet', studentListTitle:'👥 Students', todayCheckin:'Today', todayN:'Today',
-    checkinDetail:'Today\'s Check-in', checkinDone:'Done', checkinPending:'Pending', checkinCollapse:'Collapse',
+    checkinDetail:'Check-in', checkinDate:'Check-in Date', checkinDateHint:'Only dates from this week through today are available; check-ins within 3 days count for Bravo.',
+    checkinDateOutOfRange:'Only dates from this week through today are available', checkinDone:'Done', checkinPending:'Pending', checkinCollapse:'Collapse',
     streakDays:'days', flowersUnit:'bravo',
     taskDefaultHint:'💡 Default tasks apply to all students. Select a student to customize individually.',
     taskDefaultOption:'📋 Default (All Students)', taskSave:'💾 Save', taskSaved:'Tasks saved', taskSyncSaved:'and synced',
@@ -431,7 +433,8 @@ const I18N = {
     podiumTitle:'🏆 Podio Bravo', podiumEmpty:'In attesa', podiumHint:'Top 3, aggiornato in tempo reale',
     podiumMyStreak:'Mia striscia', podiumMyFlowers:'Miei Bravo',
     noStudents:'Nessuno studente registrato', studentListTitle:'👥 Studenti', todayCheckin:'Oggi', todayN:'Oggi',
-    checkinDetail:'Check-in di oggi', checkinDone:'Fatto', checkinPending:'In attesa', checkinCollapse:'Chiudi',
+    checkinDetail:'Check-in', checkinDate:'Data check-in', checkinDateHint:'Sono disponibili solo le date di questa settimana fino a oggi; i check-in entro 3 giorni contano per Bravo.',
+    checkinDateOutOfRange:'Sono disponibili solo le date di questa settimana fino a oggi', checkinDone:'Fatto', checkinPending:'In attesa', checkinCollapse:'Chiudi',
     streakDays:'giorni', flowersUnit:'bravo',
     taskDefaultHint:'💡 I compiti predefiniti valgono per tutti. Seleziona uno studente per personalizzarli.',
     taskDefaultOption:'📋 Predefinito (tutti)', taskSave:'💾 Salva', taskSaved:'Compiti salvati', taskSyncSaved:'e sincronizzati',
@@ -537,7 +540,7 @@ const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PRE
 const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', PORTFOLIO_PREFIX='__portfolio__:';
 const SUPPORT_EMAIL='lanbeier7@gmail.com', CHAT_BLOCKED_USERS_KEY='italiano_blocked_chat_users';
 const CHAT_BLOCKED_TERMS=['fuck','shit','色情','暴力','毒品','赌博','诈骗','辱骂','自杀'];
-let appData=null, currentUser=null, authToken=localStorage.getItem('italiano_auth_token')||'', teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, teacherOpenSubmenus=new Set(), chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+let appData=null, currentUser=null, authToken=localStorage.getItem('italiano_auth_token')||'', teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', teacherCheckinDate='', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, teacherOpenSubmenus=new Set(), chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -590,7 +593,7 @@ async function fetchSupabaseData(){
   streaks.forEach(s=>{data.streaks[s.username]={streak:s.streak||0,flowers:s.flowers||0,lastCheckinDate:s.last_checkin_date||null,bravoReachedAt:s.updated_at||s.bravo_reached_at||null};});
   chat.forEach(m=>{data.chatMessages.push({id:m.id,username:m.username,role:m.role,message:m.message,timestamp:m.created_at||m.timestamp});});
   hidden.forEach(h=>{if(!data.hiddenChatMessages[h.username])data.hiddenChatMessages[h.username]=[];data.hiddenChatMessages[h.username].push(h.message_key);});
-  return normalizeData(data);
+  return refreshAllStudentProgress(normalizeData(data));
 }
 
 function getInitialData(){return{users:{},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{},classTasks:{}};}
@@ -886,6 +889,25 @@ function getWeekDates(dateStr){
   const monday=new Date(base);monday.setDate(base.getDate()-day+1);
   return Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d.toISOString().split('T')[0];});
 }
+function addDays(dateStr,days){
+  const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+days);return d.toISOString().split('T')[0];
+}
+function getCurrentWeekPastDates(){
+  const today=getToday();
+  return getWeekDates(today).filter(date=>date<=today);
+}
+function getTeacherCheckinDate(){
+  const dates=getCurrentWeekPastDates();
+  if(!dates.includes(teacherCheckinDate))teacherCheckinDate=getToday();
+  return teacherCheckinDate;
+}
+function getBravoWindowDates(){
+  const today=getToday(),start=addDays(today,-2);
+  return getCurrentWeekPastDates().filter(date=>date>=start&&date<=today);
+}
+function isBravoEligibleDate(date){
+  return getBravoWindowDates().includes(date);
+}
 function getStudentTasksForDate(student,date,program){
   if(program==='portfolio'){
     const content=getPortfolioTaskForStudent(student,date);
@@ -1025,13 +1047,16 @@ async function switchTeacherTab(tab){
 }
 
 function renderTeacherStudents(main){
-  normalizeData(appData);
+  appData=refreshAllStudentProgress(normalizeData(appData));
   if(expandedStudentCheckin){
     const cls=getStudentClass(expandedStudentCheckin);
     teacherOpenSubmenus.add(cls?'class_'+encodeURIComponent(cls):'unclassedStudents');
   }
   const students=sortNamesByPinyin(Object.entries(appData.users).filter(([,v])=>v.role==='student').map(([name])=>name)).map(name=>[name,appData.users[name]]);
-  const today=getToday();
+  const checkinDate=getTeacherCheckinDate();
+  const checkinDates=getCurrentWeekPastDates();
+  const minCheckinDate=checkinDates[0]||getToday();
+  const maxCheckinDate=checkinDates[checkinDates.length-1]||getToday();
   const classNames=Object.keys(appData.classes||{}).sort((a,b)=>a.localeCompare(b));
   const classOptions=classNames.map(c=>`<option value="${c}">${c}</option>`).join('');
   const studentOptions=students.map(([name])=>`<option value="${name}">${name}</option>`).join('');
@@ -1041,14 +1066,19 @@ function renderTeacherStudents(main){
     <div class="row"><select id="classStudentSelect"><option value="">${_('classChooseStudent')}</option>${studentOptions}</select><select id="classSelect"><option value="__none__">${_('classUnassigned')}</option>${classOptions}</select><button type="button" class="btn-sm primary" onclick="assignStudentToClass()">${_('classAddStudent')}</button></div>
     <div class="hint">${_('taskDefaultHint')}</div>
   </div>`;
+  const checkinTools=`<div class="class-tools">
+    <h4 style="font-size:14px;margin-bottom:10px">${_('checkinDate')}</h4>
+    <div class="row"><input type="date" id="teacherCheckinDate" value="${checkinDate}" min="${minCheckinDate}" max="${maxCheckinDate}" onchange="changeTeacherCheckinDate(this.value)"><button type="button" class="btn-sm outline" onclick="setTeacherCheckinToday()">${_('todayN')}</button></div>
+    <div class="hint">${_('checkinDateHint')}</div>
+  </div>`;
   const renderStudentCard=name=>{
-    const ci=(appData.checkins[name]||{})[today]||{};
+    const ci=(appData.checkins[name]||{})[checkinDate]||{};
     const st=appData.streaks[name]||{};
     const dc=getTaskKeys().filter(k=>ci[k]).length;
     const ad=dc===getTaskKeys().length;
     const p=getStudentPrograms(name);
     const tags=`<div class="student-program-tags">${p.italian?`<span class="program-tag">${_('programItalian')}</span>`:''}${p.portfolio?`<span class="program-tag">${_('programPortfolio')}</span>`:''}</div>`;
-    return`<div class="student-card" id="studentCard_${encodeURIComponent(name)}" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}${tags}</div><span style="font-size:12px;color:#888;">${_('todayCheckin')} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>${expandedStudentCheckin===name?renderStudentCheckinDetail(name):''}`;
+    return`<div class="student-card" id="studentCard_${encodeURIComponent(name)}" onclick="showStudentCheckin('${name}')"><div class="s-top"><div class="s-name">👤 ${name} ${ad?'🌟':''}${tags}</div><span style="font-size:12px;color:#888;">${formatDate(checkinDate)} ${dc}/${getTaskKeys().length}</span></div><div class="s-stats"><span>🔥 <b>${st.streak||0}</b> ${_('streakDays')}</span><span>👏 <b>${st.flowers||0}</b> ${_('flowersUnit')}</span></div><div class="s-today">${getTaskKeys().map(k=>`<span class="s-dot ${ci[k]?'done':'pending'}" title="${k}"></span>`).join('')}</div></div>${expandedStudentCheckin===name?renderStudentCheckinDetail(name):''}`;
   };
   let listHTML='';
   if(students.length===0){
@@ -1069,7 +1099,21 @@ function renderTeacherStudents(main){
     const unclassedOpen=teacherOpenSubmenus.has('unclassedStudents');
     listHTML+=`<div class="submenu-toggle ${unclassedOpen?'open':''}" onclick="toggleSubmenu(this,'unclassedStudents')"><span>👤 ${_('classUnassigned')} (${unclassed.length})</span><span class="arrow">▶</span></div><div class="submenu-body ${unclassedOpen?'show':''}" id="unclassedStudents">${unclassed.length?unclassed.map(renderStudentCard).join(''):'<div class="empty-state" style="padding:12px">--</div>'}</div>`;
   }
-  main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+classTools+listHTML;
+  main.innerHTML=`<div class="section-title">${_('studentListTitle')} <button class="btn-sm outline" style="float:right;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshTeacherStudents()">${_('chatRefresh')}</button></div>`+checkinTools+classTools+listHTML;
+}
+
+function changeTeacherCheckinDate(date){
+  const dates=getCurrentWeekPastDates();
+  if(!dates.includes(date)){showToast(_('checkinDateOutOfRange'));teacherCheckinDate=getToday();}
+  else teacherCheckinDate=date;
+  expandedStudentCheckin='';
+  renderTeacherStudents(document.getElementById('teacherMain'));
+}
+
+function setTeacherCheckinToday(){
+  teacherCheckinDate=getToday();
+  expandedStudentCheckin='';
+  renderTeacherStudents(document.getElementById('teacherMain'));
 }
 
 async function saveClassData(message){
@@ -1147,15 +1191,15 @@ function focusExpandedStudent(){
 }
 
 function renderStudentCheckinDetail(name){
-  const today=getToday();
+  const checkinDate=getTeacherCheckinDate();
   if(!appData.checkins[name])appData.checkins[name]={};
-  if(!appData.checkins[name][today])appData.checkins[name][today]=getEmptyCheckin();
-  const ci=appData.checkins[name][today];
+  if(!appData.checkins[name][checkinDate])appData.checkins[name][checkinDate]=getEmptyCheckin();
+  const ci=appData.checkins[name][checkinDate];
   const cfgs=getTaskConfigs();
   const dc=cfgs.filter(c=>ci[c.key]).length;
   return `<div style="background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.08);margin:-4px 0 12px 0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <b style="font-size:16px">👤 ${name} · ${_('checkinDetail')}</b>
+      <b style="font-size:16px">👤 ${name} · ${formatDate(checkinDate)} ${_('checkinDetail')}</b>
       <span style="font-size:13px;color:#888">${dc}/${cfgs.length}</span>
     </div>
     ${cfgs.map(c=>`<div class="checkin-row">
@@ -1168,18 +1212,18 @@ function renderStudentCheckinDetail(name){
 }
 
 async function teacherToggleCheckin(name,key){
-  const today=getToday();
+  const checkinDate=getTeacherCheckinDate();
   if(!appData.checkins[name])appData.checkins[name]={};
-  if(!appData.checkins[name][today])appData.checkins[name][today]=getEmptyCheckin();
-  const ci=appData.checkins[name][today];
+  if(!appData.checkins[name][checkinDate])appData.checkins[name][checkinDate]=getEmptyCheckin();
+  const ci=appData.checkins[name][checkinDate];
   ci[key]=!ci[key];
   const allDone=getTaskKeys().every(k=>ci[k]);
-  updateStudentProgress(name);
+  updateStudentProgress(name,true);
   saveLocalData();
   showLoading(_('syncing'));
-  try{await saveData(currentUser.username+' checkin '+name+' '+key);updateSyncStatus(true);}catch(e){
+  try{await saveData(currentUser.username+' checkin '+name+' '+checkinDate+' '+key);updateSyncStatus(true);}catch(e){
     updateSyncStatus(false);
-    const _m=currentUser.username+' checkin '+name+' '+key;
+    const _m=currentUser.username+' checkin '+name+' '+checkinDate+' '+key;
     setTimeout(async()=>{try{await saveData(_m+'(重试)');updateSyncStatus(true);}catch(e){}},5000);
   }
   hideLoading();
@@ -1189,13 +1233,44 @@ async function teacherToggleCheckin(name,key){
   focusExpandedStudent();
 }
 
-function updateStudentProgress(name){
+function refreshAllStudentProgress(data){
+  const previous=appData;
+  appData=data;
+  Object.entries(data.users||{}).filter(([,u])=>u.role==='student').forEach(([name])=>updateStudentProgress(name,false));
+  const refreshed=appData;
+  appData=previous;
+  return refreshed;
+}
+
+function getBravoCountForStudent(name){
+  const dates=appData.checkins[name]||{};
+  const eligible=new Set(getBravoWindowDates());
+  return Object.entries(dates).reduce((sum,[date,ci])=>{
+    if(!eligible.has(date))return sum;
+    return sum+getTaskKeys().filter(k=>ci&&ci[k]).length;
+  },0);
+}
+
+function getComputedBravoReachedAt(name,flowers){
+  if(!flowers)return '9999-12-31T23:59:59.999Z';
+  const eligible=new Set(getBravoWindowDates());
+  let total=0,reached='';
+  Object.entries((appData.checkins||{})[name]||{}).filter(([date])=>eligible.has(date)).sort(([a],[b])=>a.localeCompare(b)).some(([date,ci])=>{
+    total+=getTaskKeys().filter(k=>ci&&ci[k]).length;
+    if(total>=flowers){reached=date+'T23:59:59.999Z';return true;}
+    return false;
+  });
+  return reached||'9999-12-31T23:59:59.999Z';
+}
+
+function updateStudentProgress(name,showReward){
   if(!appData.streaks[name])appData.streaks[name]={streak:0,flowers:0,lastCheckinDate:null};
   const s=appData.streaks[name];
   const oldFlowers=s.flowers||0;
   const dates=appData.checkins[name]||{};
-  s.flowers=Object.values(dates).reduce((sum,ci)=>sum+getTaskKeys().filter(k=>ci&&ci[k]).length,0);
-  if(s.flowers!==oldFlowers)s.bravoReachedAt=new Date().toISOString();
+  s.flowers=getBravoCountForStudent(name);
+  if(s.flowers>oldFlowers)s.bravoReachedAt=new Date().toISOString();
+  else if(s.flowers<oldFlowers)s.bravoReachedAt=getComputedBravoReachedAt(name,s.flowers);
   const doneDates=Object.entries(dates).filter(([,ci])=>getTaskKeys().some(k=>ci&&ci[k])).map(([date])=>date).sort();
   s.streak=0;s.lastCheckinDate=null;
   if(doneDates.length){
@@ -1207,7 +1282,8 @@ function updateStudentProgress(name){
     s.streak=streak;
     s.lastCheckinDate=doneDates[doneDates.length-1];
   }
-  saveLocalData();setTimeout(()=>showToast(_('flowerGot')),500);
+  if(showReward&&s.flowers>oldFlowers)setTimeout(()=>showToast(_('flowerGot')),500);
+  saveLocalData();
 }
 
 // ===== TEACHER: Tasks =====
@@ -1591,6 +1667,7 @@ function comparePodiumStudents(a,b){
 }
 
 function renderPodiumHTML(){
+  appData=refreshAllStudentProgress(normalizeData(appData));
   const students=Object.entries(appData.users).filter(([,v])=>v.role==='student');
   const ranked=students.map(([name])=>({name,flowers:(appData.streaks[name]||{}).flowers||0})).sort(comparePodiumStudents);
   const pos=['first','second','third'],medals=['🥇','🥈','🥉'];
