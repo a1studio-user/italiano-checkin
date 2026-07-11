@@ -16,9 +16,15 @@
 <title>A1 STUDIO暑期打卡</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helvetica Neue',sans-serif;background:linear-gradient(135deg,#f0f4f0,#e8f0e3 50%,#f5f0e8);min-height:100vh;min-height:-webkit-fill-available;color:#2c3e2d;padding-bottom:80px;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+html{width:100%;height:100%;min-height:100%;background:#f5f0e8}
+body{width:100%;min-height:100vh;min-height:100dvh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helvetica Neue',sans-serif;background:linear-gradient(135deg,#f0f4f0,#e8f0e3 50%,#f5f0e8);color:#2c3e2d;padding-bottom:80px;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+body.auth-page{min-height:100vh;min-height:100dvh;padding-bottom:0;background:#f5f0e8;overflow:hidden}
+body.auth-page .page.active{min-height:100vh;min-height:100dvh;background:#f5f0e8}
+body.app-page{height:100vh;height:100dvh;overflow:hidden;padding-bottom:0}
+body.app-page .page.active{height:100vh;height:100dvh;overflow:hidden}
+body.app-page .container{height:100vh;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 .container{max-width:500px;margin:0 auto;padding:16px;padding-bottom:20px}
-.auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:-webkit-fill-available;padding:20px}
+.auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:20px}
 .auth-card{background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 8px 30px rgba(0,0,0,.1)}
 .auth-card .logo{text-align:center;font-size:48px;margin-bottom:8px}
 .auth-card h1{text-align:center;font-size:20px;margin-bottom:4px;color:#009246}
@@ -41,9 +47,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helv
 .header .hc{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center}
 .header h1{font-size:18px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.2)}
 .user-tag{font-size:11px;color:rgba(255,255,255,.85)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid #eee;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.bottom-nav{position:fixed;bottom:calc(-1 * env(safe-area-inset-bottom,0px));left:0;right:0;min-height:calc(64px + env(safe-area-inset-bottom,0px));background:#fff;display:flex;align-items:flex-start;border-top:1px solid #eee;z-index:100;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -2px 10px rgba(0,0,0,.05);transform:translateZ(0);will-change:transform}
 body.keyboard-open .bottom-nav{display:none}
-.bottom-nav .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px 6px;cursor:pointer;color:#999;font-size:9px;gap:3px;transition:all .15s;-webkit-tap-highlight-color:transparent;border:none;background:none}
+.bottom-nav .nav-item{flex:1;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px 6px;cursor:pointer;color:#999;font-size:9px;gap:3px;transition:all .15s;-webkit-tap-highlight-color:transparent;border:none;background:none}
 .bottom-nav .nav-item .nav-icon{font-size:18px;line-height:1}
 .bottom-nav .nav-item.active{color:#009246;font-weight:600}
 .bottom-nav .nav-item:active{opacity:.6}
@@ -107,6 +113,11 @@ body.keyboard-open .bottom-nav{display:none}
 .chat-msg .cm-time{font-size:10px;color:#bbb;margin-left:4px}
 .chat-msg .cm-body{background:#fff;display:inline-block;padding:8px 12px;border-radius:14px;font-size:14px;max-width:85%;word-break:break-word;line-height:1.5;box-shadow:0 1px 3px rgba(0,0,0,.05);user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .chat-msg .cm-body:active{filter:brightness(.96)}
+.chat-msg .cm-actions{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.chat-msg.mine .cm-actions{justify-content:flex-end}
+.cm-action{border:none;background:rgba(255,255,255,.75);color:#888;border-radius:10px;padding:3px 8px;font-size:10px;line-height:1.4;min-height:24px;-webkit-appearance:none}
+.cm-action.warn{color:#c62828}
+.chat-compliance{text-align:center;color:#aaa;font-size:10px;line-height:1.6;margin-top:6px;padding:0 10px}
 .chat-msg.mine .cm-body{background:#dcf8c6}
 .chat-msg.mine{text-align:right}
 .chat-msg.mine .cm-header{justify-content:flex-end}
@@ -157,10 +168,10 @@ body.keyboard-open .bottom-nav{display:none}
 .role-tag.student{background:#e3f2fd;color:#1565c0}
 .empty-state{text-align:center;color:#bbb;padding:40px 20px;font-size:14px}
 .empty-state .icon{font-size:48px;margin-bottom:10px}
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;z-index:999;pointer-events:none;white-space:nowrap;animation:slideDown .3s ease;max-width:90vw}
-@keyframes slideDown{0%{top:-60px;opacity:0}100%{top:20px;opacity:1}}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:50%;transform:translate(-50%,0);background:#333;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;z-index:999;pointer-events:none;white-space:nowrap;animation:slideDown .3s ease;max-width:90vw}
+@keyframes slideDown{0%{transform:translate(-50%,-18px);opacity:0}100%{transform:translate(-50%,0);opacity:1}}
 .toast.hide{animation:slideUp .3s ease forwards}
-@keyframes slideUp{0%{top:20px;opacity:1}100%{top:-60px;opacity:0}}
+@keyframes slideUp{0%{transform:translate(-50%,0);opacity:1}100%{transform:translate(-50%,-18px);opacity:0}}
 .confetti-container{position:fixed;inset:0;pointer-events:none;z-index:998}
 .confetti-piece{position:absolute;font-size:24px;animation:fall linear forwards}
 @keyframes fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
@@ -180,11 +191,14 @@ body.keyboard-open .bottom-nav{display:none}
 .logout-danger:active{background:#fef2f2}
 .submenu-toggle{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;transition:all .15s}
 .submenu-toggle:active{background:#f5f5f5}
+.submenu-toggle span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px}
 .submenu-toggle .arrow{font-size:12px;color:#bbb;transition:transform .2s}
 .submenu-toggle.open .arrow{transform:rotate(90deg)}
-.submenu-body{display:none;background:#fafafa;border-radius:0 0 14px 14px;padding:0 18px 16px;margin-top:-14px;margin-bottom:14px}
+.submenu-body{display:none;background:#fafafa;border-radius:14px;padding:14px 18px 16px;margin-top:0;margin-bottom:14px}
 .submenu-body.show{display:block}
 .submenu-body .settings-card{box-shadow:none;margin-bottom:10px;background:#fff}
+.submenu-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.submenu-actions .btn-sm{flex:1 1 120px}
 </style>
 </head>
 <body>
@@ -313,7 +327,7 @@ const I18N = {
     taskDefaultOption:'📋 默认（所有学生）', taskSave:'💾 保存', taskSaved:'作业已保存', taskSyncSaved:'并同步',
     taskHomework:'📖 背课文', taskDictation:'🔤 背单词', taskRecite:'✍️ 笔头作业', taskSpeaking:'🗣️ 口语 · Conversazione',
     taskItalian:'意大利语', taskPortfolio:'作品集', taskTargetClass:'🏫 班级', taskTargetStudent:'👤 学生', taskClassOption:'🏫 班级：', taskPortfolioTitle:'作品集',
-    taskPortfolioContent:'作品集作业',
+    taskPortfolioContent:'作品集作业', studentWeeklyTasks:'📅 本周作业', studentNoWeeklyTasks:'本周暂无已布置作业',
     classManage:'🏫 班级管理', className:'班级名称', classCreate:'新建班级', classAddStudent:'加入班级', classRename:'改名', classDelete:'删除班级', classRemoveStudent:'移出', classUnassigned:'未分班学生', classCreated:'✅ 班级已保存', classUpdated:'✅ 班级已更新',
     classChooseStudent:'请选择学生',
     programItalian:'意大利语', programPortfolio:'作品集', programTitle:'专业分类', programSaved:'✅ 专业已更新',
@@ -326,12 +340,16 @@ const I18N = {
     settingsTokenBad:'❌ Token 无效，请检查', settingsTokenBuiltin:'已恢复使用内置 Token',
     settingsAddTeacher:'➕ 添加账号', settingsTeacherUser:'用户名', settingsTeacherPass:'密码', settingsAdd:'添加', settingsAddStudent:'➕ 添加学生账号', settingsAccountType:'账号类型',
     settingsUsers:'👤 所有用户', settingsMainAdmin:'主管理员', settingsDelete:'删除', settingsTeacher:'教师', settingsStudent:'学生',
-    settingsLogout:'🚪 退出账号', settingsMyAccount:'👤 我的账号', settingsContactTeacher:'如需修改密码，请联系教师。',
+    settingsLogout:'🚪 退出账号', settingsMyAccount:'👤 我的账号', settingsContactTeacher:'如需修改密码、删除账号或删除学习数据，请联系教师或 A1 STUDIO。',
     settingsLanguage:'🌐 界面语言', settingsAccount:'👤 账号', settingsChangePassword:'🔒 更改密码',
     settingsOldPassword:'当前密码', settingsNewPassword:'新密码', settingsNewPassword2:'确认新密码', refreshTasks:'刷新作业', settingsResetStudentPassword:'🔑 重置学生密码', settingsResetStudentHint:'输入学生用户名，将密码重置为 123456', settingsResetStudentBtn:'重置密码', settingsStudentPwdReset:'✅ 学生密码已重置为 123456',
     settingsChangePwdBtn:'修改密码', settingsPwdChanged:'✅ 密码已修改', settingsPwdWrong:'当前密码错误',
-    chatRefresh:'🔄 刷新消息', chatPlaceholder:'输入消息...', chatEmpty:'暂无消息，来打个招呼吧！', chatGroupHint:'群组聊天 · 所有师生可见 · 长按消息可删除',
-    confirmDeleteChat:'确定删除这条消息？', chatDeleted:'✅ 消息已删除',
+    chatRefresh:'🔄 刷新消息', chatPlaceholder:'输入消息...', chatEmpty:'暂无消息，来打个招呼吧！', chatGroupHint:'群组聊天 · 所有师生可见 · 长按消息可隐藏',
+    chatCompliance:'请保持课堂沟通友善。遇到不当内容可举报或屏蔽该用户。',
+    chatHide:'隐藏', chatReport:'举报', chatBlock:'屏蔽用户', chatUnblock:'取消屏蔽', chatBlocked:'✅ 已屏蔽该用户', chatUnblocked:'✅ 已取消屏蔽',
+    chatReported:'✅ 已生成举报邮件，请发送给 A1 STUDIO', chatBlockedUsers:'聊天屏蔽名单', chatNoBlockedUsers:'暂无屏蔽用户',
+    chatBlockedContent:'消息包含不适合课堂的内容，请修改后再发送。',
+    confirmDeleteChat:'确定隐藏这条消息？', confirmBlockChatUser:'确定屏蔽该用户的聊天消息？', chatDeleted:'✅ 消息已隐藏',
     loading:'加载中...', syncing:'同步中...', syncOK:'✅ 已同步', syncFail:'⚠️ 同步失败，使用本地缓存', syncNoToken:'⚙️ 请在设置中配置 GitHub Token',
     taskReadonlyHint:'💡 打卡由教师完成，请完成作业后联系老师',
     footer:'Buono studio! 🇮🇹', login:'登 录',
@@ -364,7 +382,7 @@ const I18N = {
     taskDefaultOption:'📋 Default (All Students)', taskSave:'💾 Save', taskSaved:'Tasks saved', taskSyncSaved:'and synced',
     taskHomework:'📖 Text Recitation', taskDictation:'🔤 Word Recitation', taskRecite:'✍️ Written Work', taskSpeaking:'🗣️ Speaking · Conversazione',
     taskItalian:'Italian', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Class', taskTargetStudent:'👤 Student', taskClassOption:'🏫 Class: ', taskPortfolioTitle:'Portfolio',
-    taskPortfolioContent:'Portfolio Task',
+    taskPortfolioContent:'Portfolio Task', studentWeeklyTasks:'📅 This Week', studentNoWeeklyTasks:'No assigned tasks this week',
     classManage:'🏫 Class Management', className:'Class name', classCreate:'Create class', classAddStudent:'Add to class', classRename:'Rename', classDelete:'Delete class', classRemoveStudent:'Remove', classUnassigned:'Unassigned students', classCreated:'✅ Class saved', classUpdated:'✅ Class updated',
     classChooseStudent:'Select student',
     programItalian:'Italian', programPortfolio:'Portfolio', programTitle:'Major category', programSaved:'✅ Category updated',
@@ -377,12 +395,16 @@ const I18N = {
     settingsTokenBad:'❌ Invalid token', settingsTokenBuiltin:'Reverted to built-in token',
     settingsAddTeacher:'➕ Add Account', settingsTeacherUser:'Username', settingsTeacherPass:'Password', settingsAdd:'Add', settingsAddStudent:'➕ Add Student', settingsAccountType:'Account type',
     settingsUsers:'👤 All Users', settingsMainAdmin:'Main Admin', settingsDelete:'Delete', settingsTeacher:'Teacher', settingsStudent:'Student',
-    settingsLogout:'🚪 Logout', settingsMyAccount:'👤 My Account', settingsContactTeacher:'Contact your teacher to change password.',
+    settingsLogout:'🚪 Logout', settingsMyAccount:'👤 My Account', settingsContactTeacher:'Contact your teacher or A1 STUDIO to change password, delete your account, or delete learning data.',
     settingsLanguage:'🌐 Language', settingsAccount:'👤 Account', settingsChangePassword:'🔒 Change Password',
     settingsOldPassword:'Current Password', settingsNewPassword:'New Password', settingsNewPassword2:'Confirm New Password', refreshTasks:'Refresh Tasks', settingsResetStudentPassword:'🔑 Reset Student Password', settingsResetStudentHint:'Enter a student username to reset the password to 123456', settingsResetStudentBtn:'Reset Password', settingsStudentPwdReset:'✅ Student password reset to 123456',
     settingsChangePwdBtn:'Change Password', settingsPwdChanged:'✅ Password changed', settingsPwdWrong:'Current password is incorrect',
-    chatRefresh:'🔄 Refresh', chatPlaceholder:'Type a message...', chatEmpty:'No messages yet. Say hello!', chatGroupHint:'Group chat · Visible to all · Long press to delete',
-    confirmDeleteChat:'Delete this message?', chatDeleted:'✅ Message deleted',
+    chatRefresh:'🔄 Refresh', chatPlaceholder:'Type a message...', chatEmpty:'No messages yet. Say hello!', chatGroupHint:'Group chat · Visible to all · Long press to hide',
+    chatCompliance:'Keep classroom chat respectful. You can report content or block a user.',
+    chatHide:'Hide', chatReport:'Report', chatBlock:'Block user', chatUnblock:'Unblock', chatBlocked:'✅ User blocked', chatUnblocked:'✅ User unblocked',
+    chatReported:'✅ Report email prepared. Please send it to A1 STUDIO.', chatBlockedUsers:'Blocked chat users', chatNoBlockedUsers:'No blocked users',
+    chatBlockedContent:'This message contains content that is not suitable for class. Please edit it.',
+    confirmDeleteChat:'Hide this message?', confirmBlockChatUser:'Block this user’s chat messages?', chatDeleted:'✅ Message hidden',
     loading:'Loading...', syncing:'Syncing...', syncOK:'✅ Synced', syncFail:'⚠️ Sync failed, using local cache', syncNoToken:'⚙️ Configure GitHub Token in Settings',
     taskReadonlyHint:'💡 Check-in is done by your teacher. Contact them after completing tasks.',
     footer:'Buono studio! 🇮🇹', login:'Login',
@@ -415,7 +437,7 @@ const I18N = {
     taskDefaultOption:'📋 Predefinito (tutti)', taskSave:'💾 Salva', taskSaved:'Compiti salvati', taskSyncSaved:'e sincronizzati',
     taskHomework:'📖 Recita il testo', taskDictation:'🔤 Recita parole', taskRecite:'✍️ Compiti scritti', taskSpeaking:'🗣️ Conversazione',
     taskItalian:'Italiano', taskPortfolio:'Portfolio', taskTargetClass:'🏫 Classe', taskTargetStudent:'👤 Studente', taskClassOption:'🏫 Classe: ', taskPortfolioTitle:'Portfolio',
-    taskPortfolioContent:'Compito portfolio',
+    taskPortfolioContent:'Compito portfolio', studentWeeklyTasks:'📅 Questa settimana', studentNoWeeklyTasks:'Nessun compito assegnato questa settimana',
     classManage:'🏫 Gestione classi', className:'Nome classe', classCreate:'Crea classe', classAddStudent:'Aggiungi alla classe', classRename:'Rinomina', classDelete:'Elimina classe', classRemoveStudent:'Rimuovi', classUnassigned:'Studenti senza classe', classCreated:'✅ Classe salvata', classUpdated:'✅ Classe aggiornata',
     classChooseStudent:'Seleziona studente',
     programItalian:'Italiano', programPortfolio:'Portfolio', programTitle:'Categoria', programSaved:'✅ Categoria aggiornata',
@@ -428,12 +450,16 @@ const I18N = {
     settingsTokenBad:'❌ Token non valido', settingsTokenBuiltin:'Ripristinato il token integrato',
     settingsAddTeacher:'➕ Aggiungi account', settingsTeacherUser:'Nome utente', settingsTeacherPass:'Password', settingsAdd:'Aggiungi', settingsAddStudent:'➕ Aggiungi studente', settingsAccountType:'Tipo account',
     settingsUsers:'👤 Tutti gli utenti', settingsMainAdmin:'Admin principale', settingsDelete:'Elimina', settingsTeacher:'Insegnante', settingsStudent:'Studente',
-    settingsLogout:'🚪 Esci', settingsMyAccount:'👤 Il mio account', settingsContactTeacher:'Contatta l\'insegnante per cambiare password.',
+    settingsLogout:'🚪 Esci', settingsMyAccount:'👤 Il mio account', settingsContactTeacher:'Contatta l\'insegnante o A1 STUDIO per cambiare password, eliminare account o dati di studio.',
     settingsLanguage:'🌐 Lingua', settingsAccount:'👤 Account', settingsChangePassword:'🔒 Cambia password',
     settingsOldPassword:'Password attuale', settingsNewPassword:'Nuova password', settingsNewPassword2:'Conferma nuova password', refreshTasks:'Aggiorna compiti', settingsResetStudentPassword:'🔑 Reimposta password studente', settingsResetStudentHint:'Inserisci il nome utente dello studente; la password sarà 123456', settingsResetStudentBtn:'Reimposta password', settingsStudentPwdReset:'✅ Password studente reimpostata a 123456',
     settingsChangePwdBtn:'Cambia password', settingsPwdChanged:'✅ Password cambiata', settingsPwdWrong:'Password attuale errata',
-    chatRefresh:'🔄 Aggiorna', chatPlaceholder:'Scrivi un messaggio...', chatEmpty:'Nessun messaggio. Di\' ciao!', chatGroupHint:'Chat di gruppo · Visibile a tutti · Premi a lungo per eliminare',
-    confirmDeleteChat:'Eliminare questo messaggio?', chatDeleted:'✅ Messaggio eliminato',
+    chatRefresh:'🔄 Aggiorna', chatPlaceholder:'Scrivi un messaggio...', chatEmpty:'Nessun messaggio. Di\' ciao!', chatGroupHint:'Chat di gruppo · Visibile a tutti · Premi a lungo per nascondere',
+    chatCompliance:'Mantieni la chat rispettosa. Puoi segnalare contenuti o bloccare un utente.',
+    chatHide:'Nascondi', chatReport:'Segnala', chatBlock:'Blocca utente', chatUnblock:'Sblocca', chatBlocked:'✅ Utente bloccato', chatUnblocked:'✅ Utente sbloccato',
+    chatReported:'✅ Email di segnalazione preparata. Inviala ad A1 STUDIO.', chatBlockedUsers:'Utenti bloccati in chat', chatNoBlockedUsers:'Nessun utente bloccato',
+    chatBlockedContent:'Questo messaggio contiene contenuti non adatti alla classe. Modificalo.',
+    confirmDeleteChat:'Nascondere questo messaggio?', confirmBlockChatUser:'Bloccare i messaggi di questo utente?', chatDeleted:'✅ Messaggio nascosto',
     loading:'Caricamento...', syncing:'Sincronizzazione...', syncOK:'✅ Sincronizzato', syncFail:'⚠️ Sincronizzazione fallita, uso cache locale', syncNoToken:'⚙️ Configura GitHub Token nelle Impostazioni',
     taskReadonlyHint:'💡 Il check-in è fatto dall\'insegnante. Contattalo dopo aver completato i compiti.',
     footer:'Buono studio! 🇮🇹', login:'Accedi',
@@ -451,7 +477,9 @@ function _(key) { return (I18N[lang] && I18N[lang][key]) || I18N['zh-CN'][key] |
 
 function setLang(l){
   lang=l; localStorage.setItem('italiano_lang',l);
-  updateAllUIText();
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  document.body.classList.remove('keyboard-open');
+  setTimeout(()=>{updateAllUIText();document.body.classList.remove('keyboard-open');},0);
 }
 
 function updateAllUIText(){
@@ -503,10 +531,13 @@ function updateAllUIText(){
 // ===== CONFIG =====
 const SUPABASE_URL='https://imzxxbxdjwqfduwsqipz.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imltenh4YnhkandxZmR1d3NxaXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTU0MzIsImV4cCI6MjA5Njg5MTQzMn0.cq8SAZU2vOl3VMdgML4LlpSKCCH-AFrYSjW64MHipnk';
+const APP_API_URL='';
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
 const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', PORTFOLIO_PREFIX='__portfolio__:';
-let appData=null, currentUser=null, teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, teacherOpenSubmenus=new Set(['unclassedStudents']), chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
+const SUPPORT_EMAIL='lanbeier7@gmail.com', CHAT_BLOCKED_USERS_KEY='italiano_blocked_chat_users';
+const CHAT_BLOCKED_TERMS=['fuck','shit','色情','暴力','毒品','赌博','诈骗','辱骂','自杀'];
+let appData=null, currentUser=null, authToken=localStorage.getItem('italiano_auth_token')||'', teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, teacherOpenSubmenus=new Set(), chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
 let currentTeacherTab='students', currentStudentTab='tasks', teacherViewEpoch=0, studentViewEpoch=0;
 
 function getToken(){return SUPABASE_ANON_KEY;}
@@ -537,7 +568,7 @@ async function fetchSupabaseData(){
   const daily=results[1].status==='fulfilled'?results[1].value||[]:[];
   const student=results[2].status==='fulfilled'?results[2].value||[]:[];
   const checkins=results[3].status==='fulfilled'?results[3].value||[]:Object.entries(fallback.checkins||{}).flatMap(([username,dates])=>Object.entries(dates||{}).map(([checkin_date,c])=>Object.assign({username,checkin_date},c)));
-  const streaks=results[4].status==='fulfilled'?results[4].value||[]:Object.entries(fallback.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null}));
+  const streaks=results[4].status==='fulfilled'?results[4].value||[]:Object.entries(fallback.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null,updated_at:s.bravoReachedAt||s.updatedAt||null}));
   const chat=results[5].status==='fulfilled'?results[5].value||[]:fallback.chatMessages||[];
   const hidden=results[6].status==='fulfilled'?results[6].value||[]:[];
   const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];data.classes={};data.studentPrograms={};data.classTasks={};
@@ -556,13 +587,13 @@ async function fetchSupabaseData(){
   });
   student.forEach(t=>{if(!data.studentTasks[t.username])data.studentTasks[t.username]={};data.studentTasks[t.username][t.task_date]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};});
   checkins.forEach(c=>{if(!data.checkins[c.username])data.checkins[c.username]={};data.checkins[c.username][c.checkin_date]={homework:!!c.homework,dictation:!!c.dictation,recite:!!c.recite,speaking:!!c.speaking};});
-  streaks.forEach(s=>{data.streaks[s.username]={streak:s.streak||0,flowers:s.flowers||0,lastCheckinDate:s.last_checkin_date||null};});
+  streaks.forEach(s=>{data.streaks[s.username]={streak:s.streak||0,flowers:s.flowers||0,lastCheckinDate:s.last_checkin_date||null,bravoReachedAt:s.updated_at||s.bravo_reached_at||null};});
   chat.forEach(m=>{data.chatMessages.push({id:m.id,username:m.username,role:m.role,message:m.message,timestamp:m.created_at||m.timestamp});});
   hidden.forEach(h=>{if(!data.hiddenChatMessages[h.username])data.hiddenChatMessages[h.username]=[];data.hiddenChatMessages[h.username].push(h.message_key);});
   return normalizeData(data);
 }
 
-function getInitialData(){return{users:{'toni':{password:'lanbeier0813',role:'teacher'}},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{},classTasks:{}};}
+function getInitialData(){return{users:{},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{},classTasks:{}};}
 
 function parseMetaJSON(text,fallback){
   try{const v=JSON.parse(text||'');return v&&typeof v==='object'?v:fallback;}catch(e){return fallback;}
@@ -773,7 +804,7 @@ async function supabaseSaveTasks(data){
 async function supabaseSaveCheckinsAndStreaks(data){
   const checkinRows=[];
   Object.entries(data.checkins||{}).forEach(([username,dates])=>Object.entries(dates||{}).forEach(([date,c])=>checkinRows.push({username,checkin_date:date,homework:!!c.homework,dictation:!!c.dictation,recite:!!c.recite,speaking:!!c.speaking,updated_at:new Date().toISOString()})));
-  const streakRows=Object.entries(data.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null,updated_at:new Date().toISOString()}));
+  const streakRows=Object.entries(data.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null,updated_at:s.bravoReachedAt||s.updatedAt||new Date().toISOString()}));
   await supabaseUpsert('checkins',checkinRows,'username,checkin_date');
   await supabaseUpsert('streaks',streakRows,'username');
 }
@@ -849,15 +880,31 @@ function getTaskConfigs(){return [
   {key:'recite',icon:'✍️',label:_('taskRecite'),name:_('taskRecite'),cls:'rc'}
 ];}
 function getEmptyCheckin(){return {homework:false,dictation:false,recite:false,speaking:false};}
+function getWeekDates(dateStr){
+  const base=new Date((dateStr||getToday())+'T00:00:00');
+  const day=base.getDay()||7;
+  const monday=new Date(base);monday.setDate(base.getDate()-day+1);
+  return Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d.toISOString().split('T')[0];});
+}
+function getStudentTasksForDate(student,date,program){
+  if(program==='portfolio'){
+    const content=getPortfolioTaskForStudent(student,date);
+    return content?[{key:'homework',icon:'🎨',cls:'sp',name:_('taskPortfolioContent'),content}]:[];
+  }
+  return getTaskConfigs().map(c=>Object.assign({},c,{content:getTaskForStudent(student,date,c.key,'italian')})).filter(t=>t.content);
+}
+function getStudentWeeklyTaskDates(student,program){
+  return getWeekDates(getToday()).map(date=>({date,tasks:getStudentTasksForDate(student,date,program)})).filter(day=>day.tasks.length>0);
+}
 
 function showLoading(m){document.getElementById('loadingText').textContent=m||_('loading');document.getElementById('loadingOverlay').style.display='flex';}
 function hideLoading(){document.getElementById('loadingOverlay').style.display='none';}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';t.classList.remove('hide');clearTimeout(t._t);t._t=setTimeout(()=>{t.classList.add('hide');setTimeout(()=>t.style.display='none',300)},2000);}
 
-function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showPage(id){document.body.classList.toggle('auth-page',id==='loginPage'||id==='registerPage');document.body.classList.toggle('app-page',id==='teacherPage'||id==='studentPage');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
 function setupKeyboardNavGuard(){
-  const editable='input, textarea, select';
+  const editable='input:not([type="hidden"]), textarea';
   document.addEventListener('focusin',e=>{
     if(e.target&&e.target.matches&&e.target.matches(editable))document.body.classList.add('keyboard-open');
   });
@@ -1014,7 +1061,7 @@ function renderTeacherStudents(main){
       const open=teacherOpenSubmenus.has(id);
       return`<div class="submenu-toggle ${open?'open':''}" onclick="toggleSubmenu(this,'${id}')"><span>🏫 ${cls} (${members.length})</span><span class="arrow">▶</span></div>
       <div class="submenu-body ${open?'show':''}" id="${id}">
-        <div style="display:flex;gap:8px;margin-bottom:10px"><button type="button" class="btn-sm outline" onclick="event.stopPropagation();renameClass('${cls}')">${_('classRename')}</button><button type="button" class="btn-sm danger" onclick="event.stopPropagation();deleteClass('${cls}')">${_('classDelete')}</button></div>
+        <div class="submenu-actions"><button type="button" class="btn-sm outline" onclick="event.stopPropagation();renameClass('${cls}')">${_('classRename')}</button><button type="button" class="btn-sm danger" onclick="event.stopPropagation();deleteClass('${cls}')">${_('classDelete')}</button></div>
         ${body}
       </div>`;
     }).join('');
@@ -1145,8 +1192,10 @@ async function teacherToggleCheckin(name,key){
 function updateStudentProgress(name){
   if(!appData.streaks[name])appData.streaks[name]={streak:0,flowers:0,lastCheckinDate:null};
   const s=appData.streaks[name];
+  const oldFlowers=s.flowers||0;
   const dates=appData.checkins[name]||{};
   s.flowers=Object.values(dates).reduce((sum,ci)=>sum+getTaskKeys().filter(k=>ci&&ci[k]).length,0);
+  if(s.flowers!==oldFlowers)s.bravoReachedAt=new Date().toISOString();
   const doneDates=Object.entries(dates).filter(([,ci])=>getTaskKeys().some(k=>ci&&ci[k])).map(([date])=>date).sort();
   s.streak=0;s.lastCheckinDate=null;
   if(doneDates.length){
@@ -1291,6 +1340,7 @@ function renderTeacherSettings(main){
         <div class="submenu-toggle" onclick="toggleSubmenu(this,'studentUsersSub')"><span>🎓 ${_('settingsStudent')} (${studentUsers.length})</span><span class="arrow">▶</span></div>
         <div class="submenu-body" id="studentUsersSub">${renderUserRows(studentUsers)}</div>
       </div>
+      ${renderChatSafetyCard()}
     </div>
     <button class="logout-danger" onclick="doLogout()">${_('settingsLogout')}</button>
     <div class="footer">${_('footer')}</div>
@@ -1435,22 +1485,22 @@ function switchStudentTab(tab){
 }
 
 function renderStudentTasks(main){
-  const today=getToday();
-  const cfgs=getTaskConfigs();
   const programs=getStudentPrograms(currentUser.username);
   if(!programs[studentTaskProgram])studentTaskProgram=programs.portfolio&&!programs.italian?'portfolio':'italian';
-  const renderItalianSection=()=>{
-    return cfgs.map(c=>({c,content:getTaskForStudent(currentUser.username,today,c.key,'italian')})).filter(x=>x.content).map(({c,content})=>`<div class="task-card"><div class="task-icon ${c.cls}">${c.icon}</div><div class="task-info"><div class="task-name">${c.name}</div><div class="task-content" lang="it">${content}</div></div></div>`).join('');
-  };
-  const renderPortfolioSection=()=>{
-    const content=getPortfolioTaskForStudent(currentUser.username,today);
-    if(!content)return '';
-    return `<div class="task-card"><div class="task-icon sp">🎨</div><div class="task-info"><div class="task-name">${_('taskPortfolioContent')}</div><div class="task-content">${content}</div></div></div>`;
-  };
   const both=programs.italian&&programs.portfolio;
-  let html=`<div class="section-title">${studentTaskProgram==='portfolio'?_('taskPortfolioTitle'):'📅 '+formatDate(today)} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`;
+  const week=getStudentWeeklyTaskDates(currentUser.username,studentTaskProgram);
+  const renderDay=({date,tasks})=>{
+    const ci=((appData.checkins||{})[currentUser.username]||{})[date]||{};
+    const doneCount=tasks.filter(t=>ci[t.key]).length;
+    const id='studentTaskDay_'+date.replace(/-/g,'');
+    return `<div class="submenu-toggle" onclick="toggleSubmenu(this,'${id}')"><span>${formatDate(date)} (${doneCount}/${tasks.length})</span><span class="arrow">▶</span></div>
+    <div class="submenu-body" id="${id}">
+      ${tasks.map(t=>`<div class="task-card"><div class="task-icon ${t.cls}">${t.icon}</div><div class="task-info"><div class="task-name">${t.name}</div><div class="task-content" ${studentTaskProgram==='italian'?'lang="it"':''}>${t.content}</div></div><span class="ci-status">${ci[t.key]?'✅ '+_('checkinDone'):'⏳ '+_('checkinPending')}</span></div>`).join('')}
+    </div>`;
+  };
+  let html=`<div class="section-title">${_('studentWeeklyTasks')} <button type="button" class="btn-sm outline" style="margin-left:auto;padding:4px 10px;min-height:28px;font-size:11px" onclick="refreshStudentTasks()">${_('refreshTasks')}</button></div>`;
   if(both)html+=`<div class="program-switch"><button type="button" class="${studentTaskProgram==='italian'?'active':''}" onclick="changeStudentTaskProgram('italian');return false;">${_('taskItalian')}</button><button type="button" class="${studentTaskProgram==='portfolio'?'active':''}" onclick="changeStudentTaskProgram('portfolio');return false;">${_('taskPortfolio')}</button></div>`;
-  html+=studentTaskProgram==='portfolio'?renderPortfolioSection():renderItalianSection();
+  html+=week.length?week.map(renderDay).join(''):`<div class="empty-state"><div class="icon">📭</div>${_('studentNoWeeklyTasks')}</div>`;
   main.innerHTML=html+`<div style="text-align:center;color:#bbb;font-size:12px;margin-top:12px">${_('taskReadonlyHint')}</div><div class="footer">${_('footer')}</div>`;
 }
 
@@ -1513,15 +1563,36 @@ function renderStudentSettings(main){
         <button class="btn-sm primary" style="width:100%" onclick="changeOwnPassword()">${_('settingsChangePwdBtn')}</button>
       </div>
       <div class="settings-card"><h4>${_('settingsMyAccount')}</h4><div class="user-list-item"><div><b>${currentUser.username}</b> <span class="role-tag student">${_('settingsStudent')}</span></div></div><div class="hint">${_('settingsContactTeacher')}</div></div>
+      ${renderChatSafetyCard()}
     </div>
     <button class="logout-danger" onclick="doLogout()">${_('settingsLogout')}</button>
     <div class="footer">${_('footer')}</div>`;
 }
 
 // ===== SHARED: Podium =====
+function getBravoReachedAt(name,flowers){
+  const s=(appData.streaks||{})[name]||{};
+  if(s.bravoReachedAt||s.updatedAt)return s.bravoReachedAt||s.updatedAt;
+  if(!flowers)return '9999-12-31T23:59:59.999Z';
+  let total=0,reached='';
+  Object.entries((appData.checkins||{})[name]||{}).sort(([a],[b])=>a.localeCompare(b)).some(([date,ci])=>{
+    total+=getTaskKeys().filter(k=>ci&&ci[k]).length;
+    if(total>=flowers){reached=date+'T23:59:59.999Z';return true;}
+    return false;
+  });
+  return reached||s.lastCheckinDate&&s.lastCheckinDate+'T23:59:59.999Z'||'9999-12-31T23:59:59.999Z';
+}
+
+function comparePodiumStudents(a,b){
+  if(b.flowers!==a.flowers)return b.flowers-a.flowers;
+  const ta=getBravoReachedAt(a.name,a.flowers),tb=getBravoReachedAt(b.name,b.flowers);
+  if(ta!==tb)return ta.localeCompare(tb);
+  return a.name.localeCompare(b.name,'zh-Hans-CN',{sensitivity:'base',numeric:true});
+}
+
 function renderPodiumHTML(){
   const students=Object.entries(appData.users).filter(([,v])=>v.role==='student');
-  const ranked=students.map(([name])=>({name,flowers:(appData.streaks[name]||{}).flowers||0})).sort((a,b)=>b.flowers-a.flowers);
+  const ranked=students.map(([name])=>({name,flowers:(appData.streaks[name]||{}).flowers||0})).sort(comparePodiumStudents);
   const pos=['first','second','third'],medals=['🥇','🥈','🥉'];
   const cols=[];
   for(let i=0;i<3;i++){
@@ -1533,7 +1604,7 @@ function renderPodiumHTML(){
 
 // ===== SHARED: Chat =====
 function renderChat(main){
-  main.innerHTML=`<div class="chat-area"><div class="chat-refresh"><button type="button" onclick="refreshChat();return false;">${_('chatRefresh')}</button></div><div class="chat-messages" id="chatMessages"><div class="empty-state" style="padding:20px"><div class="icon">💬</div>${_('chatEmpty')}</div></div><div class="chat-input-row"><input type="text" id="chatInput" placeholder="${_('chatPlaceholder')}" maxlength="500" onkeydown="if(event.key==='Enter')sendChat()"><button type="button" onclick="sendChat()">➤</button></div></div><div style="text-align:center;color:#ccc;font-size:10px;margin-top:6px">${_('chatGroupHint')}</div>`;
+  main.innerHTML=`<div class="chat-area"><div class="chat-refresh"><button type="button" onclick="refreshChat();return false;">${_('chatRefresh')}</button></div><div class="chat-messages" id="chatMessages"><div class="empty-state" style="padding:20px"><div class="icon">💬</div>${_('chatEmpty')}</div></div><div class="chat-input-row"><input type="text" id="chatInput" placeholder="${_('chatPlaceholder')}" maxlength="500" onkeydown="if(event.key==='Enter')sendChat()"><button type="button" onclick="sendChat()">➤</button></div></div><div class="chat-compliance">${_('chatGroupHint')}<br>${_('chatCompliance')}</div>`;
   renderChatMessages();
 }
 
@@ -1541,18 +1612,19 @@ function renderChatMessages(){
   const el=document.getElementById('chatMessages');if(!el)return;
   const msgs=appData.chatMessages||[];
   const hidden=getHiddenChatSet();
-  const visible=msgs.map((m,idx)=>({m,idx})).filter(x=>!hidden.has(getChatMessageKey(x.m))).slice(-100);
+  const blocked=getBlockedChatUsers();
+  const visible=msgs.map((m,idx)=>({m,idx})).filter(x=>!hidden.has(getChatMessageKey(x.m))&&!blocked.has(x.m.username)).slice(-100);
   if(visible.length===0){el.innerHTML='<div class="empty-state" style="padding:20px"><div class="icon">💬</div>'+_('chatEmpty')+'</div>';return;}
   el.innerHTML=visible.map(({m,idx})=>{
     const isMine=m.username===currentUser.username;
     const ts=formatChatTimestamp(m.timestamp);
     const roleLabel=m.role==='teacher'?_('settingsTeacher'):_('settingsStudent');
-    return`<div class="chat-msg ${isMine?'mine':''}"><div class="cm-header"><span class="cm-name">${m.username}</span><span class="cm-role ${m.role}">${roleLabel}</span><span class="cm-time">${ts}</span></div><div class="cm-body" onpointerdown="startChatLongPress(event,${idx})" onpointerup="cancelChatLongPress()" onpointerleave="cancelChatLongPress()" onpointercancel="cancelChatLongPress()" onpointermove="cancelChatLongPress()" oncontextmenu="event.preventDefault();deleteChatMessage(${idx})">${escapeHtml(m.message)}</div></div>`;
+    return`<div class="chat-msg ${isMine?'mine':''}"><div class="cm-header"><span class="cm-name">${escapeHtml(m.username)}</span><span class="cm-role ${m.role}">${roleLabel}</span><span class="cm-time">${ts}</span></div><div class="cm-body" onpointerdown="startChatLongPress(event,${idx})" onpointerup="cancelChatLongPress()" onpointerleave="cancelChatLongPress()" onpointercancel="cancelChatLongPress()" onpointermove="cancelChatLongPress()" oncontextmenu="event.preventDefault();deleteChatMessage(${idx})">${escapeHtml(m.message)}</div><div class="cm-actions"><button type="button" class="cm-action" onclick="deleteChatMessage(${idx})">${_('chatHide')}</button><button type="button" class="cm-action warn" onclick="reportChatMessage(${idx})">${_('chatReport')}</button>${!isMine?`<button type="button" class="cm-action" onclick="blockChatUser(decodeURIComponent('${encodeURIComponent(m.username||'')}'))">${_('chatBlock')}</button>`:''}</div></div>`;
   }).join('');
   el.scrollTop=el.scrollHeight;
 }
 
-function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escapeHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function getChatMessageKey(m){
   return m.id||[m.timestamp||'',m.username||'',m.role||'',m.message||''].join('|');
@@ -1562,6 +1634,66 @@ function getHiddenChatSet(){
   const u=currentUser&&currentUser.username;
   const hidden=(appData.hiddenChatMessages&&u&&appData.hiddenChatMessages[u])||[];
   return new Set(hidden);
+}
+
+function getBlockedChatUsers(){
+  try{return new Set(JSON.parse(localStorage.getItem(CHAT_BLOCKED_USERS_KEY)||'[]'));}
+  catch(e){return new Set();}
+}
+
+function saveBlockedChatUsers(set){
+  localStorage.setItem(CHAT_BLOCKED_USERS_KEY,JSON.stringify(Array.from(set).filter(Boolean)));
+}
+
+function isChatContentAllowed(msg){
+  const lower=String(msg||'').toLowerCase();
+  return !CHAT_BLOCKED_TERMS.some(term=>lower.includes(term.toLowerCase()));
+}
+
+function blockChatUser(username){
+  if(!username||username===(currentUser&&currentUser.username))return;
+  if(!confirm(_('confirmBlockChatUser')))return;
+  const blocked=getBlockedChatUsers();
+  blocked.add(username);
+  saveBlockedChatUsers(blocked);
+  renderChatMessages();
+  showToast(_('chatBlocked'));
+}
+
+function unblockChatUser(username){
+  const blocked=getBlockedChatUsers();
+  blocked.delete(username);
+  saveBlockedChatUsers(blocked);
+  showToast(_('chatUnblocked'));
+  const teacherMain=document.getElementById('teacherMain'), studentMain=document.getElementById('studentMain');
+  if(currentUser&&currentUser.role==='teacher'&&currentTeacherTab==='settings'&&teacherMain)renderTeacherSettings(teacherMain);
+  if(currentUser&&currentUser.role==='student'&&currentStudentTab==='settings'&&studentMain)renderStudentSettings(studentMain);
+}
+
+function renderChatSafetyCard(){
+  const blocked=Array.from(getBlockedChatUsers());
+  const rows=blocked.length?blocked.map(name=>`<div class="user-list-item"><div><b>${escapeHtml(name)}</b></div><button type="button" class="btn-sm outline" onclick="unblockChatUser(decodeURIComponent('${encodeURIComponent(name)}'))">${_('chatUnblock')}</button></div>`).join(''):`<div class="empty-state" style="padding:12px">${_('chatNoBlockedUsers')}</div>`;
+  return `<div class="settings-card"><h4>${_('chatBlockedUsers')}</h4>${rows}<div class="hint">${_('chatCompliance')}</div></div>`;
+}
+
+function reportChatMessage(idx){
+  if(!appData.chatMessages||!appData.chatMessages[idx])return;
+  const m=appData.chatMessages[idx];
+  const subject=encodeURIComponent('A1作业打卡聊天举报');
+  const body=encodeURIComponent([
+    '请处理以下课堂聊天内容：',
+    '',
+    '举报人：'+((currentUser&&currentUser.username)||''),
+    '发送人：'+(m.username||''),
+    '角色：'+(m.role||''),
+    '时间：'+(m.timestamp||''),
+    '消息ID：'+getChatMessageKey(m),
+    '',
+    '消息内容：',
+    m.message||''
+  ].join('\n'));
+  window.location.href=`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+  showToast(_('chatReported'));
 }
 
 function formatChatTimestamp(ts){
@@ -1607,6 +1739,7 @@ async function deleteChatMessage(idx){
 
 async function sendChat(){
   const input=document.getElementById('chatInput');const msg=input.value.trim();if(!msg)return;input.value='';
+  if(!isChatContentAllowed(msg)){showToast(_('chatBlockedContent'));input.value=msg;return;}
   if(!appData.chatMessages)appData.chatMessages=[];
   appData.chatMessages.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),username:currentUser.username,role:currentUser.role,message:msg,timestamp:new Date().toISOString()});
   if(appData.chatMessages.length>CHAT_MAX)appData.chatMessages=appData.chatMessages.slice(-CHAT_MAX);
