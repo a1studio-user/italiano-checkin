@@ -318,8 +318,9 @@ const I18N = {
     tnav_students:'学生', tnav_tasks:'作业', tnav_podium:'排行榜', tnav_chat:'聊天', tnav_settings:'设置',
     snav_tasks:'作业', snav_podium:'排行榜', snav_chat:'聊天', snav_settings:'设置',
     installBanner:'添加到主屏幕，像 App 一样使用', installBtn:'安装',
-    podiumTitle:'🏆 Bravo 排行榜', podiumEmpty:'虚位以待', podiumHint:'仅展示前三名，实时更新',
+    podiumTitle:'🏆 Bravo 排行榜', podiumEmpty:'虚位以待', podiumHint:'仅展示已同意公开的前三名，实时更新',
     podiumMyStreak:'我的连续打卡', podiumMyFlowers:'我的 Bravo',
+    leaderboardConsentTitle:'参与公开排行榜', leaderboardConsentBody:'排行榜会向所有登录用户公开你的用户名和 Bravo 数量，并将这些信息上传到服务器用于实时排名。你的学习作业和打卡记录不会公开。你可在“设置”中随时退出排行榜。', leaderboardConsentAgree:'同意并参与', leaderboardConsentDecline:'暂不参与', leaderboardPrivacyTitle:'排行榜隐私', leaderboardPrivacyJoined:'你已同意公开用户名和 Bravo 数量，用于全体用户可见的实时排行榜。', leaderboardPrivacyNotJoined:'你未参与公开排行榜；你的用户名和 Bravo 数量不会出现在排行榜中。', leaderboardJoin:'参与排行榜', leaderboardLeave:'退出排行榜', leaderboardLeft:'已退出公开排行榜',
     noStudents:'还没有学生注册', studentListTitle:'👥 学生打卡', todayCheckin:'今日', todayN:'今日',
     checkinDetail:'打卡', checkinDate:'打卡日期', checkinDateHint:'仅可选择本周内截至今天的日期；三日内打卡计入 Bravo。',
     checkinDateOutOfRange:'只能选择本周内截至今天的日期', checkinDone:'已完成', checkinPending:'待完成', checkinCollapse:'收起',
@@ -374,8 +375,9 @@ const I18N = {
     tnav_students:'Students', tnav_tasks:'Tasks', tnav_podium:'Podium', tnav_chat:'Chat', tnav_settings:'Settings',
     snav_tasks:'Tasks', snav_podium:'Podium', snav_chat:'Chat', snav_settings:'Settings',
     installBanner:'Add to Home Screen', installBtn:'Install',
-    podiumTitle:'🏆 Bravo Podium', podiumEmpty:'Waiting', podiumHint:'Top 3, live updates',
+    podiumTitle:'🏆 Bravo Podium', podiumEmpty:'Waiting', podiumHint:'Top 3 participants, live updates',
     podiumMyStreak:'My Streak', podiumMyFlowers:'My Bravo',
+    leaderboardConsentTitle:'Join the public leaderboard', leaderboardConsentBody:'The leaderboard shares your username and Bravo total with all signed-in users and uploads this information to our server for live ranking. Your homework and check-in records are not public. You can leave the leaderboard at any time in Settings.', leaderboardConsentAgree:'Agree and join', leaderboardConsentDecline:'Not now', leaderboardPrivacyTitle:'Leaderboard privacy', leaderboardPrivacyJoined:'You agreed to share your username and Bravo total in the live leaderboard visible to signed-in users.', leaderboardPrivacyNotJoined:'You are not in the public leaderboard. Your username and Bravo total will not appear there.', leaderboardJoin:'Join leaderboard', leaderboardLeave:'Leave leaderboard', leaderboardLeft:'Left the public leaderboard',
     noStudents:'No students registered yet', studentListTitle:'👥 Students', todayCheckin:'Today', todayN:'Today',
     checkinDetail:'Check-in', checkinDate:'Check-in Date', checkinDateHint:'Only dates from this week through today are available; check-ins within 3 days count for Bravo.',
     checkinDateOutOfRange:'Only dates from this week through today are available', checkinDone:'Done', checkinPending:'Pending', checkinCollapse:'Collapse',
@@ -430,8 +432,9 @@ const I18N = {
     tnav_students:'Studenti', tnav_tasks:'Compiti', tnav_podium:'Podio', tnav_chat:'Chat', tnav_settings:'Impostazioni',
     snav_tasks:'Compiti', snav_podium:'Podio', snav_chat:'Chat', snav_settings:'Impostazioni',
     installBanner:'Aggiungi alla schermata Home', installBtn:'Installa',
-    podiumTitle:'🏆 Podio Bravo', podiumEmpty:'In attesa', podiumHint:'Top 3, aggiornato in tempo reale',
+    podiumTitle:'🏆 Podio Bravo', podiumEmpty:'In attesa', podiumHint:'Primi 3 partecipanti, aggiornato in tempo reale',
     podiumMyStreak:'Mia striscia', podiumMyFlowers:'Miei Bravo',
+    leaderboardConsentTitle:'Partecipa alla classifica pubblica', leaderboardConsentBody:'La classifica mostra a tutti gli utenti connessi il tuo nome utente e il totale Bravo e carica queste informazioni sul nostro server per l’aggiornamento in tempo reale. Compiti e check-in non sono pubblici. Puoi uscire dalla classifica in qualsiasi momento nelle Impostazioni.', leaderboardConsentAgree:'Accetto e partecipo', leaderboardConsentDecline:'Non ora', leaderboardPrivacyTitle:'Privacy della classifica', leaderboardPrivacyJoined:'Hai acconsentito a condividere nome utente e totale Bravo nella classifica in tempo reale visibile agli utenti connessi.', leaderboardPrivacyNotJoined:'Non partecipi alla classifica pubblica. Il tuo nome utente e totale Bravo non appariranno.', leaderboardJoin:'Partecipa alla classifica', leaderboardLeave:'Esci dalla classifica', leaderboardLeft:'Uscito dalla classifica pubblica',
     noStudents:'Nessuno studente registrato', studentListTitle:'👥 Studenti', todayCheckin:'Oggi', todayN:'Oggi',
     checkinDetail:'Check-in', checkinDate:'Data check-in', checkinDateHint:'Sono disponibili solo le date di questa settimana fino a oggi; i check-in entro 3 giorni contano per Bravo.',
     checkinDateOutOfRange:'Sono disponibili solo le date di questa settimana fino a oggi', checkinDone:'Fatto', checkinPending:'In attesa', checkinCollapse:'Chiudi',
@@ -537,7 +540,7 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const APP_API_URL='';
 const APP_VERSION='v21';
 const CHAT_MAX=200, PENDING_USERS_KEY='italiano_pending_users', DELETED_USER_PREFIX='__deleted_user__:', SUPABASE_TIMEOUT_MS=12000, SUPABASE_RETRIES=2;
-const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', PORTFOLIO_PREFIX='__portfolio__:';
+const META_CLASSES_KEY='__meta_classes__', META_PROGRAMS_KEY='__meta_student_programs__', META_CLASS_TASKS_KEY='__meta_class_tasks__', META_LEADERBOARD_CONSENT_KEY='__meta_leaderboard_consents__', PORTFOLIO_PREFIX='__portfolio__:';
 const SUPPORT_EMAIL='lanbeier7@gmail.com', CHAT_BLOCKED_USERS_KEY='italiano_blocked_chat_users';
 const CHAT_BLOCKED_TERMS=['fuck','shit','色情','暴力','毒品','赌博','诈骗','辱骂','自杀'];
 let appData=null, currentUser=null, authToken=localStorage.getItem('italiano_auth_token')||'', teacherTaskStudent='__default__', teacherTaskProgram='italian', studentTaskProgram='italian', teacherCheckinDate='', expandedStudentCheckin='', newAccountPrograms={italian:true,portfolio:false}, classEditInProgress=false, teacherOpenSubmenus=new Set(), chatTimer=null, teacherRefreshTimer=null, chatLongPressTimer=null, saveLock=Promise.resolve();
@@ -563,7 +566,8 @@ async function fetchSupabaseData(){
     supabaseRequest('checkins?select=*'),
     supabaseRequest('streaks?select=*'),
     supabaseRequest('chat_messages?select=*&created_at=gte.'+encodeURIComponent(getTodayStartISO())+'&order=created_at.asc'),
-    supabaseRequest('hidden_chat_messages?select=*')
+    supabaseRequest('hidden_chat_messages?select=*'),
+    supabaseRequest('leaderboard_entries?select=*')
   ]);
   if(results[0].status!=='fulfilled')throw results[0].reason;
   const fallback=appData||loadLocalData();
@@ -574,7 +578,8 @@ async function fetchSupabaseData(){
   const streaks=results[4].status==='fulfilled'?results[4].value||[]:Object.entries(fallback.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null,updated_at:s.bravoReachedAt||s.updatedAt||null}));
   const chat=results[5].status==='fulfilled'?results[5].value||[]:fallback.chatMessages||[];
   const hidden=results[6].status==='fulfilled'?results[6].value||[]:[];
-  const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];data.classes={};data.studentPrograms={};data.classTasks={};
+  const leaderboard=results[7].status==='fulfilled'?results[7].value||[]:fallback.leaderboard||[];
+  const data=getInitialData();data.users={};data.chatMessages=[];data.hiddenChatMessages={};data.deletedUsers=[];data.classes={};data.studentPrograms={};data.classTasks={};data.leaderboard={};data.leaderboardConsents={};
   const deletedUsers=new Set();
   daily.forEach(t=>{if((t.task_date||'').startsWith(DELETED_USER_PREFIX))deletedUsers.add(decodeDeletedUsername(t.task_date));});
   data.deletedUsers=Array.from(deletedUsers);
@@ -586,6 +591,7 @@ async function fetchSupabaseData(){
     if(key===META_CLASSES_KEY){data.classes=parseMetaJSON(t.homework,{});return;}
     if(key===META_PROGRAMS_KEY){data.studentPrograms=parseMetaJSON(t.homework,{});return;}
     if(key===META_CLASS_TASKS_KEY){data.classTasks=parseMetaJSON(t.homework,{});return;}
+    if(key===META_LEADERBOARD_CONSENT_KEY){data.leaderboardConsents=parseMetaJSON(t.homework,{});return;}
     data.dailyTasks[key]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};
   });
   student.forEach(t=>{if(!data.studentTasks[t.username])data.studentTasks[t.username]={};data.studentTasks[t.username][t.task_date]={homework:t.homework||'',dictation:t.dictation||'',recite:t.recite||'',speaking:t.speaking||''};});
@@ -593,10 +599,11 @@ async function fetchSupabaseData(){
   streaks.forEach(s=>{data.streaks[s.username]={streak:s.streak||0,flowers:s.flowers||0,lastCheckinDate:s.last_checkin_date||null,bravoReachedAt:s.updated_at||s.bravo_reached_at||null};});
   chat.forEach(m=>{data.chatMessages.push({id:m.id,username:m.username,role:m.role,message:m.message,timestamp:m.created_at||m.timestamp});});
   hidden.forEach(h=>{if(!data.hiddenChatMessages[h.username])data.hiddenChatMessages[h.username]=[];data.hiddenChatMessages[h.username].push(h.message_key);});
+  leaderboard.forEach(entry=>{data.leaderboard[entry.username]={flowers:entry.flowers||0,bravoReachedAt:entry.updated_at||entry.bravo_reached_at||null};});
   return refreshAllStudentProgress(normalizeData(data));
 }
 
-function getInitialData(){return{users:{},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{},classTasks:{}};}
+function getInitialData(){return{users:{},dailyTasks:{},studentTasks:{},checkins:{},streaks:{},leaderboard:{},leaderboardConsents:{},chatMessages:[],hiddenChatMessages:{},classes:{},studentPrograms:{},classTasks:{}};}
 
 function parseMetaJSON(text,fallback){
   try{const v=JSON.parse(text||'');return v&&typeof v==='object'?v:fallback;}catch(e){return fallback;}
@@ -609,6 +616,8 @@ function normalizeData(data){
   data.studentTasks=data.studentTasks||{};
   data.checkins=data.checkins||{};
   data.streaks=data.streaks||{};
+  data.leaderboard=data.leaderboard||{};
+  data.leaderboardConsents=data.leaderboardConsents||{};
   data.chatMessages=data.chatMessages||[];
   data.hiddenChatMessages=data.hiddenChatMessages||{};
   data.deletedUsers=data.deletedUsers||[];
@@ -618,6 +627,8 @@ function normalizeData(data){
   if(!data.users['toni']&&data.users['Antonio']){data.users['toni']=data.users['Antonio'];delete data.users['Antonio'];}
   const validStudents=new Set(Object.entries(data.users).filter(([,u])=>u.role==='student').map(([name])=>name));
   Object.keys(data.studentPrograms).forEach(name=>{if(!validStudents.has(name))delete data.studentPrograms[name];});
+  Object.keys(data.leaderboard).forEach(name=>{if(!validStudents.has(name))delete data.leaderboard[name];});
+  Object.keys(data.leaderboardConsents).forEach(name=>{if(!validStudents.has(name))delete data.leaderboardConsents[name];});
   validStudents.forEach(name=>{
     const p=data.studentPrograms[name]||{};
     data.studentPrograms[name]={italian:p.italian!==false,portfolio:!!p.portfolio};
@@ -647,6 +658,7 @@ async function saveDataNow(msg,pending){
   else if(msg.startsWith('隐藏聊天:'))await supabaseSaveHiddenChatMessages(pending);
   else if(msg.startsWith('注册学生:')||msg.startsWith('添加教师:')||msg.startsWith('修改密码:'))await supabaseSaveOneUser(pending,msg.split(':').slice(1).join(':').trim());
   else if(msg.startsWith('班级:')||msg.startsWith('专业:'))await supabaseSaveTasks(pending);
+  else if(msg.startsWith('排行榜隐私:')){await supabaseSaveTasks(pending);await supabaseSyncLeaderboardEntries(pending);}
   else if(msg.startsWith('同步本地注册:'))await supabaseSaveUsers(pending);
   else await supabaseSaveAll(pending);
   appData=pending;saveLocalData();
@@ -777,7 +789,8 @@ async function supabaseDeleteUser(username){
     supabaseRequest('hidden_chat_messages?username=eq.'+name,{method:'DELETE'}),
     supabaseRequest('student_tasks?username=eq.'+name,{method:'DELETE'}),
     supabaseRequest('checkins?username=eq.'+name,{method:'DELETE'}),
-    supabaseRequest('streaks?username=eq.'+name,{method:'DELETE'})
+    supabaseRequest('streaks?username=eq.'+name,{method:'DELETE'}),
+    supabaseRequest('leaderboard_entries?username=eq.'+name,{method:'DELETE'})
   ]);
   const deleted=await supabaseRequest('app_users?username=eq.'+name,{method:'DELETE',headers:{'Prefer':'return=representation'}});
   const check=await supabaseRequest('app_users?select=username&username=eq.'+name);
@@ -799,6 +812,7 @@ async function supabaseSaveTasks(data){
   dailyRows.push(metaTaskRow(META_CLASSES_KEY,data.classes||{}));
   dailyRows.push(metaTaskRow(META_PROGRAMS_KEY,data.studentPrograms||{}));
   dailyRows.push(metaTaskRow(META_CLASS_TASKS_KEY,data.classTasks||{}));
+  dailyRows.push(metaTaskRow(META_LEADERBOARD_CONSENT_KEY,data.leaderboardConsents||{}));
   const studentRows=[];
   Object.entries(data.studentTasks||{}).forEach(([username,dates])=>Object.entries(dates||{}).forEach(([date,t])=>studentRows.push(studentTaskRow(username,date,t))));
   await supabaseUpsert('daily_tasks',dailyRows,'task_date');
@@ -810,6 +824,23 @@ async function supabaseSaveCheckinsAndStreaks(data){
   const streakRows=Object.entries(data.streaks||{}).map(([username,s])=>({username,streak:s.streak||0,flowers:s.flowers||0,last_checkin_date:s.lastCheckinDate||null,updated_at:s.bravoReachedAt||s.updatedAt||new Date().toISOString()}));
   await supabaseUpsert('checkins',checkinRows,'username,checkin_date');
   await supabaseUpsert('streaks',streakRows,'username');
+  await supabaseSyncLeaderboardEntries(data);
+}
+
+function getLeaderboardEntryRows(data){
+  return Object.entries(data.leaderboardConsents||{}).filter(([username,consented])=>consented&&data.users&&data.users[username]&&data.users[username].role==='student').map(([username])=>{
+    const streak=(data.streaks||{})[username]||{};
+    return {username,flowers:streak.flowers||0,updated_at:streak.bravoReachedAt||streak.updatedAt||new Date().toISOString()};
+  });
+}
+
+async function supabaseSyncLeaderboardEntries(data){
+  const rows=getLeaderboardEntryRows(data);
+  await supabaseUpsert('leaderboard_entries',rows,'username');
+}
+
+async function supabaseDeleteLeaderboardEntry(username){
+  await supabaseRequest('leaderboard_entries?username=eq.'+encodeURIComponent(username),{method:'DELETE'});
 }
 async function supabaseSaveChatMessages(data){
   const rows=(data.chatMessages||[]).map(m=>({id:getChatMessageKey(m),username:m.username,role:m.role,message:m.message,created_at:m.timestamp||new Date().toISOString()}));
@@ -1544,6 +1575,40 @@ function showStudentPage(){
   showPage('studentPage');updateAllUIText();
   document.getElementById('studentNameTag').textContent=currentUser.username;
   switchStudentTab('tasks');
+  if(!Object.prototype.hasOwnProperty.call(appData.leaderboardConsents||{},currentUser.username))setTimeout(showLeaderboardConsent,120);
+}
+
+function hasLeaderboardConsent(username){
+  return !!((appData.leaderboardConsents||{})[username]);
+}
+
+function showLeaderboardConsent(){
+  if(!currentUser||currentUser.role!=='student'||Object.prototype.hasOwnProperty.call(appData.leaderboardConsents||{},currentUser.username))return;
+  const main=document.getElementById('studentMain');
+  main.innerHTML=`<div class="settings-card" style="margin-top:20px"><h4>${_('leaderboardConsentTitle')}</h4><div class="hint" style="font-size:13px;color:#555;line-height:1.7">${_('leaderboardConsentBody')}</div><button type="button" class="btn-sm primary" style="width:100%;margin-top:16px" onclick="setLeaderboardConsent(true)">${_('leaderboardConsentAgree')}</button><button type="button" class="btn-sm outline" style="width:100%;margin-top:10px" onclick="setLeaderboardConsent(false)">${_('leaderboardConsentDecline')}</button></div>`;
+}
+
+async function setLeaderboardConsent(consented){
+  if(!currentUser||currentUser.role!=='student')return;
+  appData.leaderboardConsents=appData.leaderboardConsents||{};
+  appData.leaderboardConsents[currentUser.username]=!!consented;
+  if(!consented)delete appData.leaderboard[currentUser.username];
+  showLoading(_('syncing'));
+  try{
+    if(!consented)await supabaseDeleteLeaderboardEntry(currentUser.username);
+    await saveData('排行榜隐私:'+currentUser.username);
+    if(consented)await fetchDataFromApi();
+    updateSyncStatus(true);
+    showToast(consented?('✅ '+_('leaderboardConsentAgree')):_('leaderboardLeft'));
+  }catch(e){
+    updateSyncStatus(false);
+    showToast(_('syncFail'));
+  }finally{
+    hideLoading();
+    if(currentStudentTab==='podium')renderStudentPodium(document.getElementById('studentMain'));
+    else if(currentStudentTab==='settings')renderStudentSettings(document.getElementById('studentMain'));
+    else renderStudentTasks(document.getElementById('studentMain'));
+  }
 }
 
 function switchStudentTab(tab){
@@ -1624,12 +1689,14 @@ async function refreshPodium(){
 }
 
 function renderStudentSettings(main){
+  const joined=hasLeaderboardConsent(currentUser.username);
   main.innerHTML=`<div class="settings-card"><h4>${_('settingsLanguage')}</h4>
     <select id="langSelect" onchange="setLang(this.value)">
       <option value="zh-CN" ${lang==='zh-CN'?'selected':''}>🇨🇳 简体中文</option>
       <option value="en" ${lang==='en'?'selected':''}>🇬🇧 English</option>
       <option value="it" ${lang==='it'?'selected':''}>🇮🇹 Italiano</option>
     </select></div>
+    <div class="settings-card"><h4>${_('leaderboardPrivacyTitle')}</h4><div class="hint">${joined?_('leaderboardPrivacyJoined'):_('leaderboardPrivacyNotJoined')}</div><button type="button" class="btn-sm ${joined?'danger':'primary'}" style="width:100%;margin-top:12px" onclick="setLeaderboardConsent(${joined?'false':'true'})">${joined?_('leaderboardLeave'):_('leaderboardJoin')}</button></div>
     <div class="submenu-toggle" onclick="toggleSubmenu(this,'studentAccountSub')"><span>${_('settingsAccount')}</span><span class="arrow">▶</span></div>
     <div class="submenu-body" id="studentAccountSub">
       <div class="settings-card"><h4>${_('settingsChangePassword')}</h4>
@@ -1668,8 +1735,7 @@ function comparePodiumStudents(a,b){
 
 function renderPodiumHTML(){
   appData=refreshAllStudentProgress(normalizeData(appData));
-  const students=Object.entries(appData.users).filter(([,v])=>v.role==='student');
-  const ranked=students.map(([name])=>({name,flowers:(appData.streaks[name]||{}).flowers||0})).sort(comparePodiumStudents);
+  const ranked=Object.entries(appData.leaderboard||{}).filter(([name])=>hasLeaderboardConsent(name)&&appData.users[name]&&appData.users[name].role==='student').map(([name,entry])=>({name,flowers:entry.flowers||0})).sort(comparePodiumStudents);
   const pos=['first','second','third'],medals=['🥇','🥈','🥉'];
   const cols=[];
   for(let i=0;i<3;i++){
